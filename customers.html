@@ -1880,7 +1880,7 @@ function buildGrid(host, cfg){
       pv = (pv!=null && prz) ? pv/prz : null;
       useFmt='pct'; useMv='pp';
     } else if(st.show!=='share' && r.editable && cfg.editMetric && r.level===1){
-      editable = true;
+      editable = false; /* display only: no what-if editing */
     }
 
     if(st.mode==='pace' && cfg.pace){
@@ -2024,7 +2024,7 @@ function buildGrid(host, cfg){
   if(cfg.lenses) c += seg('View', cfg.lenses, st.lens);
   if(cfg.share!==false) c += seg('Show', [{id:'count',label:cfg.countLabel||'Count'},{id:'share',label:'Share'}], st.show);
   if(cfg.cellModes && cfg.cellModes.length>1) c += seg('Cells show', cfg.cellModes, st.mode);
-  if(cfg.editMetric) c += '<div class="ctrl" style="margin-left:auto"><button class="ghost" data-reset>Reset edits</button></div>';
+  /* display only: Reset edits removed */
   ctl.innerHTML = c;
 
   const groups = ctl.querySelectorAll('.ctrl');
