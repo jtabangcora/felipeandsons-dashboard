@@ -354,6 +354,45 @@ tr.sep td{ height: 12px; border-bottom: 1px solid var(--rule-2); background: var
 .v.mv.flat{ color: var(--ink-4); }
 .cell .v.none{ color: var(--ink-4); }
 
+/* walk-in / booked reads as a labelled stack — each figure with its own
+   micro-label so the reader never decodes a slash-run to tell them apart. */
+.cell .parts{ display: flex; flex-direction: column; gap: 3px; width: 100%; min-width: 104px; }
+.cell.big .parts{ min-width: 116px; }
+.cell .pt{ display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.cell .pt .pl{
+  font-family: var(--ffm); font-size: 8.5px; letter-spacing: 0.07em; text-transform: uppercase;
+  color: var(--ink-4); white-space: nowrap;
+}
+.cell .pt .pv{
+  font-family: var(--ffm); font-variant-numeric: tabular-nums; font-size: 11.5px; color: var(--ink-2);
+}
+.cell .pt .pv.none{ color: var(--ink-4); }
+
+/* retention cell — the return rate is the headline the eye scans for, so it leads,
+   large, under a small "returning" tag; the counts that compose it sit below, each
+   labelled and lighter. one figure to read at a glance, its evidence underneath. */
+.cell .ret{ display: flex; flex-direction: column; align-items: flex-end; gap: 2px; width: 100%; min-width: 118px; }
+.cell .ret-hero{ display: flex; flex-direction: column; align-items: flex-end; line-height: 1.04; margin-bottom: 4px; }
+.cell .ret-hero .rv{
+  font-family: var(--ffm); font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 600;
+  color: var(--ink); letter-spacing: -0.01em;
+}
+.cell.big .ret-hero .rv{ font-size: 17px; }
+.cell .ret-hero .rv.none{ color: var(--ink-4); font-weight: 400; }
+.cell .ret-hero .rl{
+  font-family: var(--ffm); font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-4); margin-top: 1px;
+}
+.cell .ret .rc{ display: flex; align-items: baseline; justify-content: space-between; gap: 12px; width: 100%; }
+.cell .ret .rc i{
+  font-style: normal; font-family: var(--ffm); font-size: 8.5px; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--ink-4); white-space: nowrap;
+}
+.cell .ret .rc b{
+  font-family: var(--ffm); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 400; color: var(--ink-2);
+}
+.cell .ret .rc b.none{ color: var(--ink-4); }
+
 td.editable .v{ cursor: text; border-bottom: 1px dotted var(--rule-3); border-radius: 0; }
 td.editable:hover .v{ border-bottom: 1px solid var(--ink); }
 td.editable .v:focus{ outline: 2px solid var(--ink); outline-offset: 2px; border-radius: var(--r-xs); }
@@ -1392,6 +1431,17 @@ Object.keys(ROSTER).forEach(function(code){
     if(!ROLE_OF[r[0]]) ROLE_OF[r[0]] = r[1];
   });
 });
+/* which barbers each branch actually carries on its own roster now. a branch's
+   named barber rows are drawn only from this set (plus roving barbers, who belong
+   to one branch but sit wherever they worked). a barber the data attributes to a
+   branch that is not on that branch's current roster falls to Others, so a branch
+   never lists a barber it does not have. */
+const BRANCH_BARBERS = {};
+Object.keys(ROSTER).forEach(function(code){
+  const set = {};
+  ROSTER[code].forEach(function(r){ if(/barber/i.test(r[1])) set[r[0]] = true; });
+  BRANCH_BARBERS[code] = set;
+});
 function canon(name){
   if(ALIAS[name]) return ALIAS[name];
   return ROSTER_LC[String(name).trim().toLowerCase()] || null;
@@ -1414,7 +1464,8 @@ function roleTag(name){
 /* Split an export's name list three ways: the branch's own barbers, the roving
    barbers who sit under them, and everyone else in one Others bucket. A name the
    roster does not know at all is its own group inside Others. */
-function splitRoster(names){
+function splitRoster(names, code){
+  const own = (code && BRANCH_BARBERS[code]) || null;
   const map = {}, unknown = [];
   (names||[]).forEach(function(n){
     const c = canon(n);
@@ -1423,9 +1474,10 @@ function splitRoster(names){
   const on = [], roving = [], off = [];
   Object.keys(map).sort().forEach(function(c){
     const e = { name:c, from:map[c] };
-    if(!isBarber(c))     off.push(e);
-    else if(isRoving(c)) roving.push(e);
-    else                 on.push(e);
+    if(!isBarber(c))         off.push(e);      // not a barber: front desk, utility, haberdashery, management
+    else if(isRoving(c))     roving.push(e);   // a roving barber sits under whichever branch it worked
+    else if(!own || own[c])  on.push(e);       // this branch's own barber (or no branch context supplied)
+    else                     off.push(e);      // a barber, but not on this branch's roster: not current staff here
   });
   unknown.forEach(function(n){ off.push({ name:n, from:[n], unknown:true }); });
   off.sort(function(a,b){ return a.name < b.name ? -1 : a.name > b.name ? 1 : 0; });
@@ -1657,6 +1709,36 @@ const F = {
   ret4:  v=> (v==null) ? '—' : nd(v[0])+' / '+nd(v[1])+' / '+nd(v[2])+' / '+pd(v[3]),
   peso0: v=> v==null? '—' : '₱'+nfmt(Math.round(v),0)
 };
+/* the walk-in / booked pair reads as one labelled stack, each figure with its
+   own micro-label so the reader never decodes a slash-run to tell them apart. */
+function partsHTML(v){
+  const labels = ['Walk-in','Booked'];
+  let s = '<span class="parts">';
+  for(let i=0;i<labels.length;i++){
+    const raw = (v==null) ? null : v[i];
+    s += '<span class="pt"><span class="pl">'+labels[i]+'</span>'
+       + '<span class="pv'+(raw==null?' none':'')+'">'+nd(raw)+'</span></span>';
+  }
+  return s + '</span>';
+}
+/* a retention cell leads with the return rate — the one figure the eye is scanning
+   for — set large under a small "returning" tag, with the counts that compose it
+   listed below, each labelled and lighter. rate first, its evidence underneath.
+   ret3 is a branch (new / repeat), ret4 a barber (new to branch / to him / repeat). */
+function retHTML(fmt, v){
+  const rate = (v==null) ? null : v[fmt==='ret3' ? 2 : 3];
+  const counts = (fmt==='ret3')
+    ? [['New', v?v[0]:null], ['Repeat', v?v[1]:null]]
+    : [['New to branch', v?v[0]:null], ['New to barber', v?v[1]:null], ['Repeat', v?v[2]:null]];
+  let s = '<span class="ret"><span class="ret-hero">'
+        + '<span class="rv'+(rate==null?' none':'')+'">'+pd(rate)+'</span>'
+        + '<span class="rl">returning</span></span>';
+  counts.forEach(function(c){
+    s += '<span class="rc"><i>'+c[0]+'</i>'
+       + '<b'+(c[1]==null?' class="none"':'')+'>'+nd(c[1])+'</b></span>';
+  });
+  return s + '</span>';
+}
 function signPeso(v){ return (v<0?'−':'+')+'₱'+nfmt(Math.abs(Math.round(v)),0); }
 function signPeso2(v){ return (v<0?'−':'+')+'₱'+nfmt(Math.abs(v),2); }
 
@@ -1765,6 +1847,14 @@ function buildGrid(host, cfg){
 
   function cellFor(r, p, prev, parentRow, isNow){
     const fmt = r.fmt || (cfg.fmtFor ? cfg.fmtFor(st) : null) || cfg.fmt || 'peso';
+    /* multi-part cells name each figure; movement and share do not apply to a run
+       of counts, so they render and return before that logic. retention leads with
+       its rate; the walk-in/booked pair reads as a labelled stack. */
+    if(fmt==='duo' || fmt==='ret3' || fmt==='ret4'){
+      if(st.mode==='movement') return { html:'<span class="v mv flat">—</span>', editable:false };
+      const raw = r.val(p.key);
+      return { html: (fmt==='duo') ? partsHTML(raw) : retHTML(fmt, raw), editable:false };
+    }
     const mv  = r.movement || cfg.movement || 'pct';
     const good = (r.upIsGood!==undefined) ? r.upIsGood : (cfg.upIsGood!==false);
     let v = r.val(p.key), pv = prev? r.val(prev.key) : null;
@@ -2202,13 +2292,14 @@ function rosterRows(g, idBase, mkVal, derived){
 function barberRows(b, idx){
   const roster = BARBER_ROSTER[b.code];
   if(!roster || !roster.length) return barberStub(b, 'no attribution source');
-  const g = splitRoster(roster);
+  const g = splitRoster(roster, b.code);
   const val = function(pk,n){ return barberVal(pk,b.code,n,idx); };
   const rows = rosterRows(g, b.code, function(from){
     return function(pk){ return sumNames(from, function(n){ return val(pk,n); }); };
   });
-  if(g.off.length) rows.push(othersRow(b.code, g.off, val, 2));
-  return rows;
+  /* the list carries this branch's own barbers and the roving barbers only.
+     off-roster names still count in the branch line, but never as a barber row. */
+  return rows.length ? rows : barberStub(b, 'no branch barbers attributed');
 }
 /* a derived barber row: both halves must exist. Where the denominator is the week
    itself it is seven days per person, so an Others row of k people divides by 7k. */
@@ -2221,21 +2312,11 @@ function barberRatio(b, numIdx, denIdx){
                              : sumNames(names, function(x){ return barberVal(pk,b.code,x,denIdx); });
     return (n!=null && d) ? n/d : null;
   }
-  const g = splitRoster(roster);
+  const g = splitRoster(roster, b.code);
   const rows = rosterRows(g, b.code, function(from){
     return function(pk){ return rate(pk, from); };
   }, true);
-  if(g.off.length){
-    rows.push({ id:b.code+'/others', name:'Others', level:2, derived:true, tag:'off roster',
-      val: function(pk){ return rate(pk, namesOf(g.off)); },
-      children: g.off.map(function(e){
-        const r = { id:b.code+'/others/'+e.name, name:e.name, level:3, derived:true,
-                    val: function(pk){ return rate(pk, e.from); } };
-        const t = e.unknown ? '' : roleTag(e.name); if(t) r.tag = t;
-        return r;
-      }) });
-  }
-  return rows;
+  return rows.length ? rows : barberStub(b, 'no branch barbers attributed');
 }
 function rowsUnitBranch(metric, opts){
   const o = opts||{};
@@ -2406,11 +2487,10 @@ const UH = document.getElementById('unit-haberdashery');
   function ybeBarberKids(b, idx){
     const roster = YBE_ROSTER[b.code];
     if(!roster.length) return [{ id:b.code+'/none', name:'Barber level', level:2, tag:'no export', val:()=>null }];
-    const g = splitRoster(roster);
+    const g = splitRoster(roster, b.code);
     const val = (pk,n)=>ybeBarberVal(pk, b.code, n, idx);
     const rows = rosterRows(g, b.code, from=> pk=>sumNames(from, n=>val(pk,n)));
-    if(g.off.length) rows.push(othersRow(b.code+'/y', g.off, val, 2));
-    return rows;
+    return rows.length ? rows : [{ id:b.code+'/none', name:'Barber level', level:2, tag:'no export', val:()=>null }];
   }
   /* Retention: one cell per row rather than a tree of parts.
      branch  ·  new to the branch / repeat to the branch / rate
@@ -2428,17 +2508,9 @@ const UH = document.getElementById('unit-haberdashery');
     return (nb==null && nx==null && rp==null) ? null : [nb, nx, rp, rate2(nx,rp)];
   }
   function retBarberKids(b){
-    const g = splitRoster(YBE_ROSTER[b.code]);
-    if(!g.on.length && !g.roving.length && !g.off.length)
-      return [{ id:b.code+'/none', name:'Barber level', level:2, tag:'no export', val:()=>null }];
+    const g = splitRoster(YBE_ROSTER[b.code], b.code);
     const rows = rosterRows(g, b.code+'/b', from=> pk=>retBarberCell(pk, b.code, from));
-    if(g.off.length){
-      rows.push({ id:b.code+'/b/others', name:'Others', level:2, tag:'off roster',
-        val: pk=>retBarberCell(pk, b.code, namesOf(g.off)),
-        children: g.off.map(e=>({ id:b.code+'/b/others/'+e.name, name:e.name, level:3,
-          val: pk=>retBarberCell(pk, b.code, e.from) })) });
-    }
-    return rows;
+    return rows.length ? rows : [{ id:b.code+'/none', name:'Barber level', level:2, tag:'no export', val:()=>null }];
   }
   function treeFor(st){
     if(st.lens==='totals'){
@@ -2488,7 +2560,7 @@ const UH = document.getElementById('unit-haberdashery');
   const HEADS = {
     totals:    'Foot traffic · branch from the daily form, barbers from Yodel',
     demand:    'Walked in / Booked ahead · turn-downs · cancellation rate',
-    retention: 'Branch: new / repeat / rate   ·   Barber: new to branch / new to him / repeat / rate',
+    retention: 'Retention · each figure labelled in the cell · Yodel',
     source:    'Where they came from'
   };
   buildGrid(host, {
