@@ -10,7 +10,8 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500&display=swap">
 <style>
   :root { --canvas:#F7F6F3; --ink:#2F3437; --ink-3:#787774; --rule:#EAEAEA; }
-  @media (prefers-color-scheme: dark) { :root { --canvas:#141311; --ink:#F5F3EF; --ink-3:#96938C; --rule:#2C2A27; } }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --canvas:#141311; --ink:#F5F3EF; --ink-3:#96938C; --rule:#2C2A27; } }
+  :root[data-theme="dark"] { --canvas:#141311; --ink:#F5F3EF; --ink-3:#96938C; --rule:#2C2A27; }
   * { box-sizing: border-box; }
   html, body { margin:0; height:100%; background:var(--canvas); color:var(--ink); }
   body { display:flex; flex-direction:column; font-family:-apple-system,"SF Pro Display","Helvetica Neue","Segoe UI",Helvetica,Arial,sans-serif; }
@@ -20,6 +21,8 @@
   nav a:hover { color:var(--ink); }
   nav a[aria-current="page"] { color:var(--ink); border-bottom-color:var(--ink); }
   main { flex:1 1 auto; position:relative; }
+  #theme { margin-left:auto; flex:0 0 auto; font:500 11px "JetBrains Mono",ui-monospace,monospace; letter-spacing:.06em; text-transform:uppercase; color:var(--ink-3); background:transparent; border:1px solid var(--rule); border-radius:6px; padding:6px 10px; cursor:pointer; }
+  #theme:hover { color:var(--ink); }
   iframe { position:absolute; inset:0; width:100%; height:100%; border:0; display:none; background:var(--canvas); }
   iframe.on { display:block; }
 </style>
@@ -30,6 +33,7 @@
   <a href="#sales" data-tab="sales">Sales</a>
   <a href="#customers" data-tab="customers">Customers</a>
   <a href="#staff" data-tab="staff">Staff</a>
+  <button id="theme" type="button" aria-label="Switch light or dark mode">Dark</button>
 </nav>
 <main>
   <iframe id="f-sales" title="Sales Dashboard" data-src="sales.html"></iframe>
@@ -52,6 +56,26 @@
       }
     });
   }
+  // Light / dark: one switch for the whole site, pushed into every dashboard frame.
+  var mq = window.matchMedia("(prefers-color-scheme: dark)");
+  var theme = null;
+  try { theme = localStorage.getItem("fs-theme"); } catch (e) {}
+  if (theme !== "light" && theme !== "dark") theme = mq.matches ? "dark" : "light";
+  function applyTheme() {
+    document.documentElement.setAttribute("data-theme", theme);
+    document.getElementById("theme").textContent = theme === "dark" ? "Light" : "Dark";
+    TABS.forEach(function (t) {
+      var f = document.getElementById("f-" + t);
+      try { if (f.contentDocument && f.contentDocument.documentElement) f.contentDocument.documentElement.setAttribute("data-theme", theme); } catch (e) {}
+    });
+  }
+  TABS.forEach(function (t) { document.getElementById("f-" + t).addEventListener("load", applyTheme); });
+  document.getElementById("theme").addEventListener("click", function () {
+    theme = theme === "dark" ? "light" : "dark";
+    try { localStorage.setItem("fs-theme", theme); } catch (e) {}
+    applyTheme();
+  });
+  applyTheme();
   window.addEventListener("hashchange", function () { show(location.hash.slice(1)); });
   show(location.hash.slice(1));
 </script>

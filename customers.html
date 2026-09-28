@@ -700,6 +700,10 @@ table.hm tbody th.d .nf{
   margin-top:7px; padding-top:8px; border-top:1px dotted var(--rule-2);
   font-size:11px; line-height:1.5; color:var(--ink-3);
 }
+
+.promo-ctrls{ display:flex; flex-wrap:wrap; gap:14px 22px; align-items:center; margin:0 0 16px; }
+/* dashboard site: notes removed */
+.pagefoot, .warn, .rb-note{ display:none !important; }
 </style>
 <div class="ambient" aria-hidden="true"></div>
 
@@ -714,7 +718,7 @@ table.hm tbody th.d .nf{
       <a href="#m-retention">Retention</a>
       <a href="#m-hours">Booking Hours</a>
       <a href="#m-sources">Sources</a>
-      <a href="#m-gaps">Gaps</a>
+      <a href="#m-promo">Promos</a>
     </nav>
   </div>
   <div class="mast-sub" id="periodbar"></div>
@@ -731,60 +735,36 @@ table.hm tbody th.d .nf{
 
   <div id="unit-barbershop"></div>
 
-  <section class="sec" id="m-gaps">
-    <div class="sec-head"><h2><span class="n">08</span>Gaps</h2>
-      <div class="src">Every dash on this page, and its cause</div></div>
-    <table class="ref">
-      <thead><tr><th>What is missing</th><th>Where</th><th>Why it dashes</th></tr></thead>
-      <tbody>
-        <tr>
-          <td class="t">Customer source</td>
-          <td class="o">07 · Sources</td>
-          <td>No system captures whether a customer lives near the branch, works near it, is visiting, or is a foreigner. Yodel holds name, phone, branch, barber, date, time and status; the DOR and the till hold none of it either. <b>The whole section is structure with nothing behind it.</b> Capture it at booking in Yodel, or add one question to the CSAT slip, and the section fills itself.</td>
-        </tr>
-        <tr>
-          <td class="t">The 6&ndash;7 PM hour</td>
-          <td class="o">06 &middot; turn-downs</td>
-          <td><b>The TURN DOWN MONITORING form has no 6:01&ndash;7:00 PM column.</b> It runs 9:01&ndash;10:00 AM through 5:01&ndash;6:00 PM, then jumps straight to 7:01&ndash;8:00 PM. A customer turned away in that hour cannot be recorded at all, so the <b>18</b> row carries a hatch mark on its label and can never show a badge. It sits immediately after PPM's worst hour and inside Podium's evening run, which is the worst place for a blind spot. <b>Ask the branches whether they have been putting 6&ndash;7 PM turn-downs into the 7&ndash;8 PM box</b> &mdash; if so, the 19:00 row is inflated and mislocated, and Podium's is the first to check. Fix the form, then reload.</td>
-        </tr>
-        <tr>
-          <td class="t">BGC's hourly turn-down log</td>
-          <td class="o">06 &middot; turn-downs</td>
-          <td>BGC's sheet covers 1&ndash;3 Sep and reads <b>zero on all three days</b>, while the DOR records <b>2 on 1 Sep and 3 on 2 Sep</b>. The log is not being kept, so BGC's hourly split is unknown and <b>no badge is placed on its grid at all</b>. A zero the DOR contradicts is not a measurement.</td>
-        </tr>
-        <tr>
-          <td class="t">Turn-down windows</td>
-          <td class="o">06 &middot; turn-downs</td>
-          <td>Each branch started logging on its own day &mdash; POD 31 Aug, BGC and PPM 1 Sep, LEV 4 Sep &mdash; so <b>a red badge is a raw count over that branch's own short window, sitting on a booking figure averaged over six weeks.</b> Read <b>+6</b> as "six people turned away in that slot across the logged days", never as a per-day figure. The counts are never averaged, and <b>the All-branches card carries no badges</b> because summing unequal windows under one label would read as measured. A weekday the log never covered is marked with a red dot on its column header &mdash; no badge there means unknown, not quiet. No turn-down <i>rate</i> is computed anywhere: with three to nine logged days a rate would swing on one event. Revisit at a full month.</td>
-        </tr>
-        <tr>
-          <td class="t">PPM 3 September</td>
-          <td class="o">06 &middot; turn-downs</td>
-          <td>The sheet logs 2 turn-downs at 8:01&ndash;9:00 PM; the DOR logs 0 for that day. Every other overlapping day at PPM ties exactly (sheet 28 vs DOR 26 over 1&ndash;6 Sep, all of the gap on 3 Sep). Shown and flagged rather than dashed, because 2 of 35 does not put the shape in doubt.</td>
-        </tr>
-        <tr>
-          <td class="t">Trading hours</td>
-          <td class="o">06 · Booking Hours</td>
-          <td>No source records what hours each branch is open. A cell reading <b>0</b> is therefore either nobody booked or the shop was shut, and the page cannot tell you which. Every branch has whole hour-columns at zero across all six weeks; those are named under each grid rather than shaded as weak demand.</td>
-        </tr>
-        <tr>
-          <td class="t">Acquisition channel</td>
-          <td class="o">04 · Foot Traffic, <i>Source</i> lens</td>
-          <td>The older <i>Source</i> lens asks a different question — Instagram, Google Maps, a friend told them — and its field was never built either. <b>Two things called "source" on one page is a decision to make, not a bug:</b> keep both, or fold the acquisition list into 07 and retire the lens.</td>
-        </tr>
-        <tr>
-          <td class="t">Barber-level rows before 3 Aug</td>
-          <td class="o">04, 05</td>
-          <td>Barber attribution is gated on SML covering every open day at 95% or better. That holds from the week ending 3 August 2026 onward; earlier weeks dash until the H1 SML load runs.</td>
-        </tr>
-        <tr>
-          <td class="t">Fixed 6-week window</td>
-          <td class="o">06 · Booking Hours</td>
-          <td>Not a gap so much as a boundary: the heatmaps are 27 July – 6 September 2026 and <b>do not follow the period control</b>. Making them follow it needs the same pull repeated for every week on the axis.</td>
-        </tr>
-      </tbody>
-    </table>
+  <div class="unit-rule">Discounts &amp; Promos</div>
+
+  <section class="sec in" id="m-promo">
+    <div class="sec-head">
+      <h2><span class="n">08</span>Barbershop promo codes</h2>
+      <div class="src">SML &middot; 17 Aug &ndash; 6 Sep 2026</div>
+    </div>
+    <div class="promo-ctrls">
+      <div class="ctrl"><label>Branch</label><div class="seg" id="seg-promo-branch"></div></div>
+      <div class="ctrl"><button class="ghost" id="tg-promo-used" aria-pressed="true">Only codes used here</button></div>
+    </div>
+    <div class="gridframe"><div class="gridwrap"><table class="g" id="grid-promo-bbs"></table></div></div>
   </section>
+
+  <section class="sec in" id="m-promo-rtl">
+    <div class="sec-head">
+      <h2><span class="n">09</span>Retail promo codes</h2>
+      <div class="src">SML &middot; 17 Aug &ndash; 6 Sep 2026</div>
+    </div>
+    <div class="gridframe"><div class="gridwrap"><table class="g" id="grid-promo-rtl"></table></div></div>
+  </section>
+
+  <section class="sec in" id="m-promo-pen">
+    <div class="sec-head">
+      <h2><span class="n">10</span>Promo share of the business</h2>
+      <div class="src">Tagged &divide; everything</div>
+    </div>
+    <div class="gridframe"><div class="gridwrap"><table class="g" id="grid-promo-pen"></table></div></div>
+  </section>
+
 
   <footer class="pagefoot">
     <span>Felipe and Sons Barberdashery &middot; Customer Analytics &middot; working file</span>
@@ -3186,4 +3166,139 @@ function sourceRet(pk, source, scope, i){ return null; }
   }));
 })();
 
+</script>
+
+<script>
+/* Discounts & Promos: ported from F&S Promo Analysis (SML, 17 Aug - 6 Sep 2026) */
+(function(){
+"use strict";
+
+
+const P = {"weeks": [{"n": "W34", "range": "17 \u2013 23 Aug", "end": "23 Aug"}, {"n": "W35", "range": "24 \u2013 30 Aug", "end": "30 Aug"}, {"n": "W36", "range": "31 Aug \u2013 6 Sep", "end": "6 Sep"}], "branches": ["ALL", "BGC", "EROD", "LEV", "POD", "PPM"], "units": [{"name": "Barbershop", "key": "bbs", "groups": [{"name": "Legacy", "key": "legacy", "codes": ["DISC10-DAD", "10%SENIOR&PWD", "DISC-MGT"]}, {"name": "Classpass", "key": "classpass", "codes": ["CLASSPASS"]}, {"name": "Corporate partnership", "key": "corp", "codes": ["10%NEO", "PPM-PARTNERSHIP10%", "DISC15%-METROBANK&MANULIFE-JUNE2026-NOV2026", "DISC15%-METROBANK-12125-053126", "DISC20%-PARTNERSDICSCOUNT-DEFFENSOR", "DISC15%-SMASHBROS-AUG2026"]}, {"name": "KOLs", "key": "kols", "codes": ["Less150-GabAviola-Aug2025-Nov2025", "LESS150-GABAVIOLA-AUG2025-NOV2025", "LESS150-GABAVIOLA-NOV2025", "LESS150-KOLS-PPEREZ-DEC25-DEC26", "s150-AlvinJuliano-07/16/2025-10/16/2025", "LESS150-KOLSJTAMAYO-0626-0926", "less150-kolsjtamayo-0626-0926", "Less150-KOLSJett-Jan202026-July202026", "BBS-LESS150-KOLSENZO-2026", "FindFelipeWithAlvinJ", "Less150-PeterP-Dec25-Mar25"]}]}, {"name": "Retail", "key": "rtl", "groups": [{"name": "Retail promos", "key": "retail", "codes": ["RTL-PAYDYPROMO", "RTL-PAYDAYPROMO", "RTL-PAYDAY", "DISC10%-PAYDAY-JAN2026"]}]}], "data": {"ALL": {"DISC10-DAD": [[29, 35, 1972.0, 25228.0], [23, 31, 1768.0, 19992.0], [39, 42, 1893.0, 30637.0]], "10%SENIOR&PWD": [[41, 41, 2734.0, 37616.0], [35, 35, 2813.0, 29287.0], [30, 30, 2227.5, 28367.5]], "DISC-MGT": [[3, 3, 340.0, 1700.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "CLASSPASS": [[14, 14, 2674.0, 10696.0], [15, 15, 2902.0, 12288.0], [16, 16, 2742.0, 11648.0]], "10%NEO": [[2, 2, 0.0, 4500.0], [1, 1, 68.0, 612.0], [1, 1, 0.0, 2450.0]], "PPM-PARTNERSHIP10%": [[1, 1, 84.5, 760.5], [1, 1, 68.0, 612.0], [4, 4, 288.5, 2596.5]], "DISC15%-METROBANK&MANULIFE-JUNE2026-NOV2026": [[1, 1, 202.5, 1147.5], [1, 1, 202.5, 1147.5], [0, 0, 0.0, 0.0]], "DISC15%-METROBANK-12125-053126": [[0, 0, 0.0, 0.0], [1, 1, 0.0, 1350.0], [0, 0, 0.0, 0.0]], "DISC20%-PARTNERSDICSCOUNT-DEFFENSOR": [[2, 2, 136.0, 1224.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC15%-SMASHBROS-AUG2026": [[1, 1, 0.0, 680.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "Less150-GabAviola-Aug2025-Nov2025": [[0, 0, 0.0, 0.0], [2, 2, 150.0, 1210.0], [5, 5, 0.0, 3400.0]], "LESS150-GABAVIOLA-AUG2025-NOV2025": [[1, 1, 150.0, 530.0], [1, 1, 150.0, 530.0], [0, 0, 0.0, 0.0]], "LESS150-GABAVIOLA-NOV2025": [[1, 1, 150.0, 530.0], [0, 0, 0.0, 0.0], [1, 1, 150.0, 530.0]], "LESS150-KOLS-PPEREZ-DEC25-DEC26": [[1, 1, 150.0, 530.0], [1, 1, 150.0, 530.0], [0, 0, 0.0, 0.0]], "s150-AlvinJuliano-07/16/2025-10/16/2025": [[1, 1, 150.0, 530.0], [0, 0, 0.0, 0.0], [1, 1, 150.0, 530.0]], "LESS150-KOLSJTAMAYO-0626-0926": [[1, 1, 150.0, 530.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "less150-kolsjtamayo-0626-0926": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [1, 1, 150.0, 530.0]], "Less150-KOLSJett-Jan202026-July202026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [1, 1, 150.0, 530.0]], "BBS-LESS150-KOLSENZO-2026": [[1, 1, 150.0, 530.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "FindFelipeWithAlvinJ": [[1, 1, 150.0, 530.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "Less150-PeterP-Dec25-Mar25": [[1, 1, 0.0, 680.0], [2, 2, 0.0, 1930.0], [0, 0, 0.0, 0.0]], "RTL-PAYDYPROMO": [[0, 0, 0.0, 0.0], [15, 19, 1150.5, 10354.5], [6, 6, 357.0, 3213.0]], "RTL-PAYDAYPROMO": [[0, 0, 0.0, 0.0], [5, 6, 357.0, 3213.0], [3, 3, 178.5, 1606.5]], "RTL-PAYDAY": [[0, 0, 0.0, 0.0], [2, 2, 0.0, 1785.0], [1, 1, 0.0, 680.0]], "DISC10%-PAYDAY-JAN2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [2, 3, 178.5, 1606.5]]}, "BGC": {"DISC10-DAD": [[6, 6, 0.0, 7480.0], [5, 5, 0.0, 4080.0], [17, 17, 136.0, 14824.0]], "10%SENIOR&PWD": [[7, 7, 0.0, 13010.0], [6, 6, 315.0, 6805.0], [6, 6, 0.0, 8320.0]], "DISC-MGT": [[2, 2, 204.0, 1156.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "CLASSPASS": [[0, 0, 0.0, 0.0], [2, 2, 270.0, 1760.0], [2, 2, 136.0, 1224.0]], "10%NEO": [[2, 2, 0.0, 4500.0], [1, 1, 68.0, 612.0], [1, 1, 0.0, 2450.0]], "PPM-PARTNERSHIP10%": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC15%-METROBANK&MANULIFE-JUNE2026-NOV2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC15%-METROBANK-12125-053126": [[0, 0, 0.0, 0.0], [1, 1, 0.0, 1350.0], [0, 0, 0.0, 0.0]], "DISC20%-PARTNERSDICSCOUNT-DEFFENSOR": [[2, 2, 136.0, 1224.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC15%-SMASHBROS-AUG2026": [[1, 1, 0.0, 680.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "Less150-GabAviola-Aug2025-Nov2025": [[0, 0, 0.0, 0.0], [2, 2, 150.0, 1210.0], [5, 5, 0.0, 3400.0]], "LESS150-GABAVIOLA-AUG2025-NOV2025": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "LESS150-GABAVIOLA-NOV2025": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "LESS150-KOLS-PPEREZ-DEC25-DEC26": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "s150-AlvinJuliano-07/16/2025-10/16/2025": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "LESS150-KOLSJTAMAYO-0626-0926": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "less150-kolsjtamayo-0626-0926": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "Less150-KOLSJett-Jan202026-July202026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "BBS-LESS150-KOLSENZO-2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "FindFelipeWithAlvinJ": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "Less150-PeterP-Dec25-Mar25": [[1, 1, 0.0, 680.0], [2, 2, 0.0, 1930.0], [0, 0, 0.0, 0.0]], "RTL-PAYDYPROMO": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "RTL-PAYDAYPROMO": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "RTL-PAYDAY": [[0, 0, 0.0, 0.0], [2, 2, 0.0, 1785.0], [1, 1, 0.0, 680.0]], "DISC10%-PAYDAY-JAN2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [2, 3, 178.5, 1606.5]]}, "EROD": {"DISC10-DAD": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "10%SENIOR&PWD": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC-MGT": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "CLASSPASS": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "10%NEO": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "PPM-PARTNERSHIP10%": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC15%-METROBANK&MANULIFE-JUNE2026-NOV2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC15%-METROBANK-12125-053126": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC20%-PARTNERSDICSCOUNT-DEFFENSOR": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC15%-SMASHBROS-AUG2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "Less150-GabAviola-Aug2025-Nov2025": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "LESS150-GABAVIOLA-AUG2025-NOV2025": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "LESS150-GABAVIOLA-NOV2025": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "LESS150-KOLS-PPEREZ-DEC25-DEC26": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "s150-AlvinJuliano-07/16/2025-10/16/2025": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "LESS150-KOLSJTAMAYO-0626-0926": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "less150-kolsjtamayo-0626-0926": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "Less150-KOLSJett-Jan202026-July202026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "BBS-LESS150-KOLSENZO-2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "FindFelipeWithAlvinJ": [[1, 1, 150.0, 530.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "Less150-PeterP-Dec25-Mar25": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "RTL-PAYDYPROMO": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "RTL-PAYDAYPROMO": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "RTL-PAYDAY": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC10%-PAYDAY-JAN2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]]}, "LEV": {"DISC10-DAD": [[6, 9, 612.0, 5508.0], [5, 8, 544.0, 4896.0], [4, 4, 272.0, 2448.0]], "10%SENIOR&PWD": [[6, 6, 475.0, 4275.0], [1, 1, 68.0, 612.0], [1, 1, 68.0, 612.0]], "DISC-MGT": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "CLASSPASS": [[3, 3, 702.0, 2808.0], [1, 1, 430.0, 1720.0], [3, 3, 702.0, 2808.0]], "10%NEO": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "PPM-PARTNERSHIP10%": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC15%-METROBANK&MANULIFE-JUNE2026-NOV2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC15%-METROBANK-12125-053126": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC20%-PARTNERSDICSCOUNT-DEFFENSOR": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC15%-SMASHBROS-AUG2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "Less150-GabAviola-Aug2025-Nov2025": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "LESS150-GABAVIOLA-AUG2025-NOV2025": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "LESS150-GABAVIOLA-NOV2025": [[1, 1, 150.0, 530.0], [0, 0, 0.0, 0.0], [1, 1, 150.0, 530.0]], "LESS150-KOLS-PPEREZ-DEC25-DEC26": [[1, 1, 150.0, 530.0], [1, 1, 150.0, 530.0], [0, 0, 0.0, 0.0]], "s150-AlvinJuliano-07/16/2025-10/16/2025": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "LESS150-KOLSJTAMAYO-0626-0926": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "less150-kolsjtamayo-0626-0926": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [1, 1, 150.0, 530.0]], "Less150-KOLSJett-Jan202026-July202026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "BBS-LESS150-KOLSENZO-2026": [[1, 1, 150.0, 530.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "FindFelipeWithAlvinJ": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "Less150-PeterP-Dec25-Mar25": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "RTL-PAYDYPROMO": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "RTL-PAYDAYPROMO": [[0, 0, 0.0, 0.0], [5, 6, 357.0, 3213.0], [3, 3, 178.5, 1606.5]], "RTL-PAYDAY": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC10%-PAYDAY-JAN2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]]}, "POD": {"DISC10-DAD": [[6, 6, 408.0, 3672.0], [5, 5, 340.0, 3060.0], [7, 8, 601.0, 5409.0]], "10%SENIOR&PWD": [[1, 1, 68.0, 612.0], [2, 2, 136.0, 1224.0], [1, 1, 68.0, 612.0]], "DISC-MGT": [[1, 1, 136.0, 544.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "CLASSPASS": [[2, 2, 272.0, 1088.0], [4, 4, 772.0, 3088.0], [4, 4, 544.0, 2176.0]], "10%NEO": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "PPM-PARTNERSHIP10%": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC15%-METROBANK&MANULIFE-JUNE2026-NOV2026": [[1, 1, 202.5, 1147.5], [1, 1, 202.5, 1147.5], [0, 0, 0.0, 0.0]], "DISC15%-METROBANK-12125-053126": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC20%-PARTNERSDICSCOUNT-DEFFENSOR": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC15%-SMASHBROS-AUG2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "Less150-GabAviola-Aug2025-Nov2025": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "LESS150-GABAVIOLA-AUG2025-NOV2025": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "LESS150-GABAVIOLA-NOV2025": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "LESS150-KOLS-PPEREZ-DEC25-DEC26": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "s150-AlvinJuliano-07/16/2025-10/16/2025": [[1, 1, 150.0, 530.0], [0, 0, 0.0, 0.0], [1, 1, 150.0, 530.0]], "LESS150-KOLSJTAMAYO-0626-0926": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "less150-kolsjtamayo-0626-0926": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "Less150-KOLSJett-Jan202026-July202026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "BBS-LESS150-KOLSENZO-2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "FindFelipeWithAlvinJ": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "Less150-PeterP-Dec25-Mar25": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "RTL-PAYDYPROMO": [[0, 0, 0.0, 0.0], [6, 8, 466.0, 4194.0], [1, 1, 59.5, 535.5]], "RTL-PAYDAYPROMO": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "RTL-PAYDAY": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC10%-PAYDAY-JAN2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]]}, "PPM": {"DISC10-DAD": [[11, 14, 952.0, 8568.0], [8, 13, 884.0, 7956.0], [11, 13, 884.0, 7956.0]], "10%SENIOR&PWD": [[27, 27, 2191.0, 19719.0], [26, 26, 2294.0, 20646.0], [22, 22, 2091.5, 18823.5]], "DISC-MGT": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "CLASSPASS": [[9, 9, 1700.0, 6800.0], [8, 8, 1430.0, 5720.0], [7, 7, 1360.0, 5440.0]], "10%NEO": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "PPM-PARTNERSHIP10%": [[1, 1, 84.5, 760.5], [1, 1, 68.0, 612.0], [4, 4, 288.5, 2596.5]], "DISC15%-METROBANK&MANULIFE-JUNE2026-NOV2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC15%-METROBANK-12125-053126": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC20%-PARTNERSDICSCOUNT-DEFFENSOR": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC15%-SMASHBROS-AUG2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "Less150-GabAviola-Aug2025-Nov2025": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "LESS150-GABAVIOLA-AUG2025-NOV2025": [[1, 1, 150.0, 530.0], [1, 1, 150.0, 530.0], [0, 0, 0.0, 0.0]], "LESS150-GABAVIOLA-NOV2025": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "LESS150-KOLS-PPEREZ-DEC25-DEC26": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "s150-AlvinJuliano-07/16/2025-10/16/2025": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "LESS150-KOLSJTAMAYO-0626-0926": [[1, 1, 150.0, 530.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "less150-kolsjtamayo-0626-0926": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "Less150-KOLSJett-Jan202026-July202026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [1, 1, 150.0, 530.0]], "BBS-LESS150-KOLSENZO-2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "FindFelipeWithAlvinJ": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "Less150-PeterP-Dec25-Mar25": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "RTL-PAYDYPROMO": [[0, 0, 0.0, 0.0], [9, 11, 684.5, 6160.5], [5, 5, 297.5, 2677.5]], "RTL-PAYDAYPROMO": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "RTL-PAYDAY": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]], "DISC10%-PAYDAY-JAN2026": [[0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0], [0, 0, 0.0, 0.0]]}}, "pen": {"ALL": [{"bbsBase": 1059257.0, "rtlBase": 50865.0, "allBase": 1110122.0, "allOrders": 1190, "bbsPromo": 87942.0, "rtlPromo": 0.0, "promoOrders": 102, "disc": 9193.0}, {"bbsBase": 912823.5, "rtlBase": 34797.5, "allBase": 947621.0, "allOrders": 1037, "bbsPromo": 69488.5, "rtlPromo": 15352.5, "promoOrders": 105, "disc": 9779.0}, {"bbsBase": 1046274.0, "rtlBase": 40436.0, "allBase": 1086710.0, "allOrders": 1210, "bbsPromo": 81899.0, "rtlPromo": 6426.0, "promoOrders": 111, "disc": 8465.0}], "BGC": [{"bbsBase": 378545.0, "rtlBase": 21910.0, "allBase": 400455.0, "allOrders": 388, "bbsPromo": 28730.0, "rtlPromo": 0.0, "promoOrders": 21, "disc": 340.0}, {"bbsBase": 274702.0, "rtlBase": 12590.0, "allBase": 287292.0, "allOrders": 290, "bbsPromo": 17747.0, "rtlPromo": 1785.0, "promoOrders": 21, "disc": 803.0}, {"bbsBase": 311538.0, "rtlBase": 13701.5, "allBase": 325239.5, "allOrders": 344, "bbsPromo": 30898.0, "rtlPromo": 1606.5, "promoOrders": 34, "disc": 450.5}], "EROD": [{"bbsBase": 71310.0, "rtlBase": 1785.0, "allBase": 73095.0, "allOrders": 99, "bbsPromo": 530.0, "rtlPromo": 0.0, "promoOrders": 1, "disc": 150.0}, {"bbsBase": 83330.0, "rtlBase": 595.0, "allBase": 83925.0, "allOrders": 111, "bbsPromo": 0.0, "rtlPromo": 0.0, "promoOrders": 0, "disc": 0.0}, {"bbsBase": 84640.0, "rtlBase": 4165.0, "allBase": 88805.0, "allOrders": 110, "bbsPromo": 0.0, "rtlPromo": 0.0, "promoOrders": 0, "disc": 0.0}], "LEV": [{"bbsBase": 164426.0, "rtlBase": 4065.0, "allBase": 168491.0, "allOrders": 176, "bbsPromo": 14181.0, "rtlPromo": 0.0, "promoOrders": 18, "disc": 2239.0}, {"bbsBase": 138158.0, "rtlBase": 4998.0, "allBase": 143156.0, "allOrders": 153, "bbsPromo": 7758.0, "rtlPromo": 3213.0, "promoOrders": 13, "disc": 1549.0}, {"bbsBase": 163808.0, "rtlBase": 6861.5, "allBase": 170669.5, "allOrders": 189, "bbsPromo": 6928.0, "rtlPromo": 1606.5, "promoOrders": 13, "disc": 1520.5}], "POD": [{"bbsBase": 111833.5, "rtlBase": 6545.0, "allBase": 118378.5, "allOrders": 133, "bbsPromo": 7593.5, "rtlPromo": 0.0, "promoOrders": 12, "disc": 1236.5}, {"bbsBase": 114484.5, "rtlBase": 6574.0, "allBase": 121058.5, "allOrders": 131, "bbsPromo": 8519.5, "rtlPromo": 4194.0, "promoOrders": 18, "disc": 1916.5}, {"bbsBase": 131522.0, "rtlBase": 1725.5, "allBase": 133247.5, "allOrders": 153, "bbsPromo": 8727.0, "rtlPromo": 535.5, "promoOrders": 14, "disc": 1422.5}], "PPM": [{"bbsBase": 333142.5, "rtlBase": 16560.0, "allBase": 349702.5, "allOrders": 394, "bbsPromo": 36907.5, "rtlPromo": 0.0, "promoOrders": 50, "disc": 5227.5}, {"bbsBase": 302149.0, "rtlBase": 10040.5, "allBase": 312189.5, "allOrders": 352, "bbsPromo": 35464.0, "rtlPromo": 6160.5, "promoOrders": 53, "disc": 5510.5}, {"bbsBase": 354766.0, "rtlBase": 13982.5, "allBase": 368748.5, "allOrders": 414, "bbsPromo": 35346.0, "rtlPromo": 2677.5, "promoOrders": 50, "disc": 5071.5}]}};
+
+const AVAIL_NOTE = "Availments are distinct sales orders carrying the code. Discount is the peso value given away; net sales is what those orders still brought in.";
+
+let branch = "ALL", onlyUsed = true;
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const peso = v => "₱" + Math.round(v).toLocaleString("en-US");
+const num = v => v.toLocaleString("en-US");
+
+// per code per week: [uses, lines, disc, net]
+function agg(codes, w){
+  let a = 0, d = 0, n = 0;
+  codes.forEach(c => { const x = P.data[branch][c][w]; a += x[0]; d += x[2]; n += x[3]; });
+  return [a, d, n];
+}
+function aggTotal(codes){
+  let a = 0, d = 0, n = 0;
+  P.weeks.forEach((_, w) => { const x = agg(codes, w); a += x[0]; d += x[1]; n += x[2]; });
+  return [a, d, n];
+}
+const used = code => P.data[branch][code].some(c => c[0] > 0);
+
+function head(){
+  let h = "<thead><tr><th class='lbl' rowspan='2'>Category &middot; code</th>";
+  P.weeks.forEach((wk, i) => {
+    const now = i === P.weeks.length - 1;
+    h += `<th colspan="3" class="grp${now ? " now" : ""}">${wk.n}<span class="hd-sub">${wk.range}</span></th>`;
+  });
+  h += "<th colspan='3' class='grp trail'>3 weeks<span class='hd-sub'>17 Aug &ndash; 6 Sep</span></th></tr><tr>";
+  const trio = (cls) => `<th class="g0${cls}">Avail</th><th class="${cls.trim()}">Discount</th><th class="${cls.trim()}">Net sales</th>`;
+  P.weeks.forEach((wk, i) => { h += trio(i === P.weeks.length - 1 ? " now" : ""); });
+  h += trio(" trail");
+  h += "</tr></thead>";
+  return h;
+}
+
+function trio(v, cls, dim){
+  const c = k => `class="${[k, cls].filter(Boolean).join(" ")}"`;
+  const z = dim ? " none" : "";
+  return `<td ${c("g0")}><span class="cell"><span class="v${v[0] ? "" : " none"}">${num(v[0])}</span></span></td>` +
+         `<td ${c("")}><span class="cell"><span class="v${v[1] ? "" : z || " none"}">${peso(v[1])}</span></span></td>` +
+         `<td ${c("")}><span class="cell"><span class="v${v[2] ? "" : " none"}">${peso(v[2])}</span></span></td>`;
+}
+
+function rowHTML(label, codes, level, tag){
+  const cls = level === 0 ? "r lv0" : "r lv1";
+  let h = `<tr class="${cls}"><td class="lbl"><span class="rowname"><span class="nm">${esc(label)}</span>` +
+          (tag ? `<span class="tagx">${esc(tag)}</span>` : "") + `</span></td>`;
+  P.weeks.forEach((_, w) => { h += trio(agg(codes, w), w === P.weeks.length - 1 ? "now" : ""); });
+  h += trio(aggTotal(codes), "trail");
+  return h + "</tr>";
+}
+
+function buildUnit(unit, tableId, noteId){
+  const span = P.weeks.length * 3 + 4;
+  let h = head() + "<tbody>";
+  unit.groups.forEach((g, gi) => {
+    const codes = g.codes.filter(c => !onlyUsed || used(c));
+    if(gi) h += `<tr class="sep"><td colspan="${span}"></td></tr>`;
+    h += rowHTML(g.name, g.codes, 0, g.codes.length > 1 ? g.codes.length + " codes" : null);
+    if(codes.length) codes.forEach(c => { h += rowHTML(c, [c], 1); });
+    else h += `<tr class="r lv1"><td class="lbl"><span class="rowname"><span class="nm" style="color:var(--ink-4);font-family:var(--ff)">not used at this branch</span></span></td><td colspan="${span - 1}"></td></tr>`;
+  });
+  const all = unit.groups.flatMap(g => g.codes);
+  h += `<tr class="sep"><td colspan="${span}"></td></tr>`;
+  h += rowHTML("All " + unit.name.toLowerCase() + " promos", all, 0).replace('class="r lv0"', 'class="r lv0 fence-head"');
+  h += "</tbody>";
+  document.getElementById(tableId).innerHTML = h;
+
+}
+
+function buildPen(){
+  let h = "<thead><tr><th class='lbl'>Branch</th>";
+  P.weeks.forEach((wk, i) => { h += `<th${i === P.weeks.length - 1 ? " class='now'" : ""}>${wk.n}<span class="hd-sub">${wk.range}</span></th>`; });
+  h += "<th class='trail'>3 wks<span class='hd-sub'>total</span></th></tr></thead><tbody>";
+  const pct = (a, b) => b ? (100 * a / b).toFixed(1) + "%" : "\u2013";
+  P.branches.forEach((b, bi) => {
+    const p = P.pen[b];
+    if(bi) h += `<tr class="sep"><td colspan="${P.weeks.length + 2}"></td></tr>`;
+    h += `<tr class="r lv0"><td class="lbl"><span class="rowname"><span class="nm">${b === "ALL" ? "All branches" : b}</span></span></td>`;
+    p.forEach((x, w) => {
+      h += `<td${w === p.length - 1 ? " class='now'" : ""}><span class="cell"><span class="v">${pct(x.promoOrders, x.allOrders)}</span><span class="m">of orders</span></span></td>`;
+    });
+    const to = p.reduce((a, x) => a + x.promoOrders, 0), tb = p.reduce((a, x) => a + x.allOrders, 0);
+    h += `<td class="trail"><span class="cell"><span class="v">${pct(to, tb)}</span></span></td></tr>`;
+    [["Tagged orders", x => x.promoOrders + " / " + x.allOrders, a => a.reduce((s, x) => s + x.promoOrders, 0) + " / " + a.reduce((s, x) => s + x.allOrders, 0)],
+     ["Barbershop promo net", x => pct(x.bbsPromo, x.bbsBase), a => pct(a.reduce((s, x) => s + x.bbsPromo, 0), a.reduce((s, x) => s + x.bbsBase, 0))],
+     ["Retail promo net", x => pct(x.rtlPromo, x.rtlBase), a => pct(a.reduce((s, x) => s + x.rtlPromo, 0), a.reduce((s, x) => s + x.rtlBase, 0))],
+     ["Discount given", x => peso(x.disc), a => peso(a.reduce((s, x) => s + x.disc, 0))]
+    ].forEach(([label, f, tf]) => {
+      h += `<tr class="r lv1"><td class="lbl"><span class="rowname"><span class="nm">${label}</span></span></td>`;
+      p.forEach((x, w) => {
+        const t = f(x);
+        h += `<td${w === p.length - 1 ? " class='now'" : ""}><span class="cell"><span class="v${/^0(\.0%)?$|^\u20b10$|^0\.0%$/.test(t) ? " none" : ""}">${t}</span></span></td>`;
+      });
+      h += `<td class="trail"><span class="cell"><span class="v">${tf(p)}</span></span></td></tr>`;
+    });
+  });
+  h += "</tbody>";
+  $("#grid-promo-pen").innerHTML = h;
+}
+
+function render(){
+  buildUnit(P.units[0], "grid-promo-bbs", null);
+  buildUnit(P.units[1], "grid-promo-rtl", null);
+}
+
+function seg(el, items, active, onPick){
+  el.innerHTML = items.map(i => `<button data-k="${i.k}" class="${i.k === active ? "on" : ""}">${esc(i.label)}</button>`).join("");
+  el.querySelectorAll("button").forEach(b => b.onclick = () => {
+    el.querySelectorAll("button").forEach(x => x.classList.remove("on"));
+    b.classList.add("on"); onPick(b.dataset.k);
+  });
+}
+seg($("#seg-promo-branch"), P.branches.map(b => ({k: b, label: b === "ALL" ? "All" : b})), "ALL", k => { branch = k; render(); });
+$("#tg-promo-used").onclick = function(){
+  onlyUsed = !onlyUsed;
+  this.setAttribute("aria-pressed", String(onlyUsed));
+  this.textContent = onlyUsed ? "Only codes used here" : "All 25 codes";
+  render();
+};
+
+render(); buildPen();
+
+
+})();
 </script>
