@@ -1,42 +1,42 @@
-import "server-only";
 import { unstable_cache } from "next/cache";
-import { db } from "./db";
-import type { Customers, Sales, Team } from "./types";
+import { sql } from "./db";
+import type { Sales, Customers, Team } from "./types";
 
-const opts = { revalidate: 3600 };
+// Source data is loaded weekly, so an hour of caching costs nothing and keeps the page fast.
+const HOUR = 3600;
 
 export const getWeeks = unstable_cache(
   async (): Promise<string[]> => {
-    const rows = await db()`select dash.weeks() as j`;
-    return (rows[0]?.j ?? []) as string[];
+    const r = await sql()`select dash.weeks() as j`;
+    return r[0].j as string[];
   },
-  ["dash.weeks"],
-  opts,
+  ["dash-weeks-v1"],
+  { revalidate: HOUR },
 );
 
 export const getSales = unstable_cache(
   async (we: string, n: number): Promise<Sales> => {
-    const rows = await db()`select dash.sales(${we}::date, ${n}::int) as j`;
-    return rows[0].j as Sales;
+    const r = await sql()`select dash.sales(${we}::date, ${n}::int) as j`;
+    return r[0].j as Sales;
   },
-  ["dash.sales"],
-  opts,
+  ["dash-sales-v1"],
+  { revalidate: HOUR },
 );
 
 export const getCustomers = unstable_cache(
   async (we: string, n: number): Promise<Customers> => {
-    const rows = await db()`select dash.customers(${we}::date, ${n}::int) as j`;
-    return rows[0].j as Customers;
+    const r = await sql()`select dash.customers(${we}::date, ${n}::int) as j`;
+    return r[0].j as Customers;
   },
-  ["dash.customers"],
-  opts,
+  ["dash-customers-v1"],
+  { revalidate: HOUR },
 );
 
 export const getTeam = unstable_cache(
   async (we: string, n: number): Promise<Team> => {
-    const rows = await db()`select dash.team(${we}::date, ${n}::int) as j`;
-    return rows[0].j as Team;
+    const r = await sql()`select dash.team(${we}::date, ${n}::int) as j`;
+    return r[0].j as Team;
   },
-  ["dash.team"],
-  opts,
+  ["dash-team-v1"],
+  { revalidate: HOUR },
 );

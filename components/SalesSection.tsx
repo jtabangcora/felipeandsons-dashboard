@@ -1,269 +1,218 @@
-import type { ChannelWeek, N, Period, Sales } from "@/lib/types";
-import { BRANCHES, DASH, day, div, name, peso, num, ratioPct, signedPct, sum } from "@/lib/format";
-import { Card, SectionHead, Spark, Tag, type Tone } from "./ui";
+import type { Sales, Period, ChannelWeek, N } from "@/lib/types";
+import { peso, num, pct, ratio, delta, sumAll, dshort, dlong, monthName, quarterName, BRANCH_NAME, DASH } from "@/lib/fmt";
+import { Spark } from "./Spark";
 
-type Field = keyof Omit<ChannelWeek, "we">;
+const SHOPS = ["BGC", "PPM", "POD", "LEV", "EROD"];
 
-function lookup(sales: Sales) {
-  const map = new Map<string, Map<string, ChannelWeek>>();
-  for (const c of sales.channels) map.set(c.channel, new Map(c.weeks.map((w) => [w.we, w])));
-  return (channel: string, we: string | undefined, f: Field): N => {
-    if (!we) return null;
-    const v = map.get(channel)?.get(we)?.[f];
-    return typeof v === "number" ? v : null;
-  };
-}
-
-function indexTone(idx: N): Tone {
-  if (idx === null) return "grey";
-  if (idx >= 100) return "green";
-  if (idx >= 90) return "amber";
-  return "red";
-}
-
-function PaceTile({ title, p, kind }: { title: string; p: Period | undefined; kind: "barbershop" | "retail" }) {
-  const actual = p ? p[kind] : null;
-  const target = p ? (kind === "barbershop" ? p.target_barbershop : p.target_retail) : null;
-  const basis = p ? (kind === "barbershop" ? p.basis_barbershop : p.basis_retail) : null;
-  const elapsed = p?.elapsed ?? null;
-  const length = p?.length ?? null;
-  const paceFrac = elapsed !== null && length ? Math.min(1, elapsed / length) : null;
-  const expected = target !== null && paceFrac !== null ? target * paceFrac : null;
-  const index = div(actual, expected);
-  const idx = index === null ? null : index * 100;
-  const fill = div(actual, target);
-  const daysLeft = elapsed !== null && length !== null ? length - elapsed : null;
-
-  let needs: string;
-  if (actual === null || target === null || daysLeft === null) needs = `Needs ${DASH}/day to land`;
-  else if (actual >= target) needs = "Target landed";
-  else if (daysLeft <= 0) needs = `Closed ${peso(target - actual)} short`;
-  else needs = `Needs ${peso((target - actual) / daysLeft)}/day to land`;
-
+function PaceTile({ title, actual, target, basis, p }: { title: string; actual: N; target: N; basis: string | null; p: Period }) {
+  const pace = target != null ? (target * p.elapsed) / p.length : null;
+  const idx = actual != null && pace ? (actual / pace) * 100 : null;
+  const share = actual != null && target ? Math.min(100, (actual / target) * 100) : 0;
+  const mark = (p.elapsed / p.length) * 100;
+  const cls = idx == null ? "" : idx >= 100 ? "g" : idx >= 90 ? "a" : "r";
+  const need = actual != null && target != null && p.elapsed < p.length ? (target - actual) / (p.length - p.elapsed) : null;
   return (
     <div className="tile">
-      <div className="tile-top">
-        <span className="label">{title}</span>
-        <Tag tone={indexTone(idx)}>{idx === null ? `Index ${DASH}` : `Index ${Math.round(idx)}`}</Tag>
+      <div className="k"><span>{title}</span>{basis && basis !== "approved" ? <span className="tag a">{basis}</span> : null}</div>
+      <div className="v">{peso(actual)}</div>
+      <div className="meter" title="Share of target reached; the mark is where pace says it should be">
+        <i style={{ width: `${share}%` }} /><u style={{ left: `${mark}%` }} />
       </div>
-      <div className="tile-value">{peso(actual)}</div>
-      <div className="meter" aria-hidden="true">
-        <div className="meter-fill" style={{ width: `${Math.max(0, Math.min(1, fill ?? 0)) * 100}%` }} />
-        {paceFrac !== null ? <div className="meter-pace" style={{ left: `calc(${paceFrac * 100}% - 1px)` }} /> : null}
+      <div className="s">
+        {target != null ? <>of <b>{peso(target)}</b> · </> : <>No target set · </>}
+        {idx != null ? <span className={`tag ${cls}`}>Index {idx.toFixed(0)}</span> : <span className="tag">Index {DASH}</span>}
       </div>
-      <div className="tile-sub muted small">
-        Target {peso(target)}
-        {basis && basis !== "approved" ? (
-          <>
-            {" "}
-            <Tag tone="amber">{basis}</Tag>
-          </>
-        ) : null}
-        <br />
-        Day {elapsed ?? DASH} of {length ?? DASH} · {needs}
+      <div className="s" style={{ marginTop: 6 }}>
+        Day {p.elapsed} of {p.length}
+        {need != null && need > 0 ? <> · needs <b>{peso(need)}</b>/day to land</> : null}
       </div>
     </div>
   );
 }
 
-export default function SalesSection({ sales }: { sales: Sales }) {
-  const get = lookup(sales);
-  const weeks = [...sales.weeks].sort();
-  const sel = sales.end;
-  const selIdx = weeks.indexOf(sel);
-  const prior = selIdx > 0 ? weeks[selIdx - 1] : undefined;
-  const month = sales.periods.find((p) => p.label === "month");
-  const quarter = sales.periods.find((p) => p.label === "quarter");
+export function SalesSection({ d }: { d: Sales }) {
+  const month = d.periods.find((p) => p.label === "month")!;
+  const quarter = d.periods.find((p) => p.label === "quarter")!;
+  const shops = d.channels.filter((c) => c.kind === "shop");
+  const others = d.channels.filter((c) => c.kind !== "shop");
+  const last = d.weeks.length - 1;
+  const wk = (c: { weeks: ChannelWeek[] }, i: number) => c.weeks[i];
 
-  const systemNet = (we: string) => sum(BRANCHES.map((b) => get(b, we, "net")));
-
-  // 03: retail channels in the total vs listed below
-  const retailIn = [...BRANCHES, "SHP", "LZD", "TKT"];
-  const retailOut = ["B2B", "EVENT"];
-  const retailTotal = (we: string) => sum(retailIn.map((c) => get(c, we, "retail")));
-
-  const weekHead = weeks.map((w) => (
-    <th key={w} className={w === sel ? "" : ""}>
-      {day(w)}
-    </th>
-  ));
-
-  const seriesRow = (label: string, vals: N[], cls?: string) => (
-    <tr key={label} className={cls}>
-      <td>{label}</td>
-      {vals.map((v, i) => (
-        <td key={weeks[i]}>{peso(v)}</td>
-      ))}
-      <td>{peso(sum(vals))}</td>
-      <td className="spark-cell">
-        <Spark values={vals} />
-      </td>
-    </tr>
-  );
-
-  // 02 detail rows
-  const detail = (code: string) => {
-    const net = get(code, sel, "net");
-    const prev = get(code, prior, "net");
-    const chairs = get(code, sel, "chairs");
-    return {
-      net,
-      vs: prev === null || net === null || prev === 0 ? null : ((net - prev) / prev) * 100,
-      perChair: div(net, chairs),
-      ft: get(code, sel, "ft"),
-      arpu: get(code, sel, "arpu"),
-      retail: get(code, sel, "retail"),
-      buyers: get(code, sel, "buyers"),
-      bav: get(code, sel, "bav"),
-      bat: get(code, sel, "bat"),
-      chairs,
-      open: get(code, sel, "open"),
-    };
-  };
-  const rows = BRANCHES.map((b) => ({ code: b, ...detail(b) }));
-  const sysNet = sum(rows.map((r) => r.net));
-  const sysPrev = prior ? systemNet(prior) : null;
-  const sysChairs = sum(rows.map((r) => r.chairs));
-  const sysFt = sum(rows.map((r) => r.ft));
-  const system = {
-    net: sysNet,
-    vs: sysNet === null || sysPrev === null || sysPrev === 0 ? null : ((sysNet - sysPrev) / sysPrev) * 100,
-    perChair: div(sysNet, sysChairs),
-    ft: sysFt,
-    arpu: div(sysNet, sysFt),
-    retail: sum(rows.map((r) => r.retail)),
-    buyers: sum(rows.map((r) => r.buyers)),
-    bav: null as N,
-    bat: null as N,
-    chairs: sysChairs,
-    open: sum(rows.map((r) => r.open)),
-  };
-  const detailRow = (label: string, r: typeof system, cls?: string) => (
-    <tr key={label} className={cls}>
-      <td>{label}</td>
-      <td>{peso(r.net)}</td>
-      <td className={r.vs === null ? "" : r.vs >= 0 ? "pos" : "neg"}>{signedPct(r.vs)}</td>
-      <td>{peso(r.perChair)}</td>
-      <td>{num(r.ft)}</td>
-      <td>{peso(r.arpu)}</td>
-      <td>{peso(r.retail)}</td>
-      <td>{num(r.buyers)}</td>
-      <td>{ratioPct(r.bav)}</td>
-      <td>{ratioPct(r.bat)}</td>
-      <td>{num(r.chairs)}</td>
-      <td>{num(r.open)}</td>
-    </tr>
-  );
-
-  const hab = sales.haberdashery;
+  const systemNet = d.weeks.map((_, i) => sumAll(shops.map((c) => wk(c, i).net)));
+  const systemFt = d.weeks.map((_, i) => sumAll(shops.map((c) => wk(c, i).ft)));
+  const systemRetail = d.weeks.map((_, i) => sumAll(d.channels.filter((c) => c.kind !== "other").map((c) => wk(c, i).retail)));
+  const windowTotal = (vals: N[]) => sumAll(vals);
+  const hb = d.haberdashery;
 
   return (
     <section className="section" id="sales">
-      <SectionHead
-        id="sales-head"
-        kicker="Sales"
-        title="Sales"
-        note={<>Barbershop net sales and retail against target. Data through {day(sales.data_through, true)}.</>}
-      />
+      <div className="wrap">
+        <h2>Sales</h2>
+        <p className="lede">
+          Barbershop net sales and retail from the Daily Operations Report, week ending {dlong(d.end)}.
+          A figure with a missing day behind it prints as a dash, never as a partial total.
+        </p>
 
-      <div className="tiles">
-        <PaceTile title="Barbershop · month to date" p={month} kind="barbershop" />
-        <PaceTile title="Barbershop · quarter to date" p={quarter} kind="barbershop" />
-        <PaceTile title="Retail · month to date" p={month} kind="retail" />
-        <PaceTile title="Retail · quarter to date" p={quarter} kind="retail" />
-        <div className="tile">
-          <div className="tile-top">
-            <span className="label">Haberdashery</span>
-            <Tag tone="grey">No feed</Tag>
+        <div className="tiles">
+          <PaceTile title={`Barbershop · ${monthName(month.start)} to date`} actual={month.barbershop} target={month.target_barbershop} basis={month.basis_barbershop} p={month} />
+          <PaceTile title={`Barbershop · ${quarterName(quarter.start)} to date`} actual={quarter.barbershop} target={quarter.target_barbershop} basis={quarter.basis_barbershop} p={quarter} />
+          <PaceTile title={`Retail · ${monthName(month.start)} to date`} actual={month.retail} target={month.target_retail} basis={month.basis_retail} p={month} />
+          <PaceTile title={`Retail · ${quarterName(quarter.start)} to date`} actual={quarter.retail} target={quarter.target_retail} basis={quarter.basis_retail} p={quarter} />
+          <div className="tile">
+            <div className="k"><span>Haberdashery · {monthName(month.start)}</span></div>
+            <div className="v">{DASH}</div>
+            <div className="s">Target <b>{peso(hb.month_target)}</b> a month.</div>
+            <div className="s" style={{ marginTop: 6 }}>No order feed in the database yet. Orders live in the Haberdashery workbook.</div>
           </div>
-          <div className="tile-value">{DASH}</div>
-          <div className="tile-sub muted small">
-            No order feed in the database yet
-            <br />
-            Month target {peso(hab?.month_target ?? null)}
+        </div>
+
+        <div className="block">
+          <h3><span className="num">01</span>Net sales by week<span className="aside">barbershop services, net</span></h3>
+          <div className="tbl">
+            <table>
+              <thead>
+                <tr>
+                  <th>Branch</th>
+                  {d.weeks.map((w, i) => <th key={w} className={i === last ? "now" : ""}>{dshort(w)}</th>)}
+                  <th>{d.n} weeks</th>
+                  <th>Trend</th>
+                </tr>
+              </thead>
+              <tbody>
+                {shops.map((c) => {
+                  const vals = c.weeks.map((x) => x.net);
+                  return (
+                    <tr key={c.channel}>
+                      <td>{BRANCH_NAME[c.channel]}</td>
+                      {vals.map((v, i) => <td key={i} className={i === last ? "now" : ""}>{peso(v)}</td>)}
+                      <td>{peso(windowTotal(vals))}</td>
+                      <td><Spark values={vals} /></td>
+                    </tr>
+                  );
+                })}
+                <tr className="total">
+                  <td>F&amp;S System</td>
+                  {systemNet.map((v, i) => <td key={i}>{peso(v)}</td>)}
+                  <td>{peso(windowTotal(systemNet))}</td>
+                  <td><Spark values={systemNet} /></td>
+                </tr>
+              </tbody>
+            </table>
           </div>
+        </div>
+
+        <div className="block">
+          <h3><span className="num">02</span>Branch detail<span className="aside">week ending {dlong(d.end)}, change against the week before</span></h3>
+          <div className="tbl">
+            <table>
+              <thead>
+                <tr>
+                  <th>Branch</th><th>Net sales</th><th>vs prior</th><th>Per chair</th><th>Clients</th><th>ARPU</th>
+                  <th>Retail</th><th>Retail buyers</th><th>BAV</th><th>BAT</th><th>Chairs</th><th>Open days</th>
+                </tr>
+              </thead>
+              <tbody>
+                {shops.map((c) => {
+                  const x = c.weeks[last];
+                  const prev = last > 0 ? c.weeks[last - 1] : null;
+                  const dv = delta(x.net, prev?.net ?? null);
+                  return (
+                    <tr key={c.channel}>
+                      <td>{BRANCH_NAME[c.channel]}</td>
+                      <td>{peso(x.net)}</td>
+                      <td className={dv == null ? "dim" : dv >= 0 ? "up" : "down"}>{dv == null ? DASH : (dv >= 0 ? "+" : "") + dv.toFixed(1) + "%"}</td>
+                      <td>{x.net != null && x.chairs ? peso(x.net / x.chairs) : DASH}</td>
+                      <td>{num(x.ft)}</td>
+                      <td>{peso(x.arpu)}</td>
+                      <td>{peso(x.retail)}</td>
+                      <td>{num(x.buyers)}</td>
+                      <td>{ratio(x.bav)}</td>
+                      <td>{ratio(x.bat)}</td>
+                      <td>{num(x.chairs)}</td>
+                      <td>{num(x.open)}</td>
+                    </tr>
+                  );
+                })}
+                {(() => {
+                  const net = systemNet[last], ft = systemFt[last];
+                  const prev = last > 0 ? systemNet[last - 1] : null;
+                  const dv = delta(net, prev);
+                  const chairs = sumAll(shops.map((c) => c.weeks[last].chairs));
+                  const retail = sumAll(shops.map((c) => c.weeks[last].retail));
+                  const buyers = sumAll(shops.map((c) => c.weeks[last].buyers));
+                  return (
+                    <tr className="total">
+                      <td>F&amp;S System</td>
+                      <td>{peso(net)}</td>
+                      <td className={dv == null ? "dim" : dv >= 0 ? "up" : "down"}>{dv == null ? DASH : (dv >= 0 ? "+" : "") + dv.toFixed(1) + "%"}</td>
+                      <td>{net != null && chairs ? peso(net / chairs) : DASH}</td>
+                      <td>{num(ft)}</td>
+                      <td>{net != null && ft ? peso(net / ft) : DASH}</td>
+                      <td>{peso(retail)}</td>
+                      <td>{num(buyers)}</td>
+                      <td></td><td></td>
+                      <td>{num(chairs)}</td>
+                      <td></td>
+                    </tr>
+                  );
+                })()}
+              </tbody>
+            </table>
+          </div>
+          <p className="note">
+            Per chair is the benchmark between branches: net sales over chairs. BAV is barber-days available over chair-days on open days;
+            BAT is barber-days available over barber-days scheduled. BGC is counted at 12 chairs. ARPU is net sales over clients served.
+          </p>
+        </div>
+
+        <div className="block">
+          <h3><span className="num">03</span>Retail net sales by week<span className="aside">in-branch plus marketplaces</span></h3>
+          <div className="tbl">
+            <table>
+              <thead>
+                <tr>
+                  <th>Channel</th>
+                  {d.weeks.map((w, i) => <th key={w} className={i === last ? "now" : ""}>{dshort(w)}</th>)}
+                  <th>{d.n} weeks</th>
+                  <th>Trend</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...shops, ...others.filter((c) => c.kind === "ecom")].map((c) => {
+                  const vals = c.weeks.map((x) => x.retail);
+                  return (
+                    <tr key={c.channel}>
+                      <td>{BRANCH_NAME[c.channel]}</td>
+                      {vals.map((v, i) => <td key={i} className={i === last ? "now" : ""}>{peso(v)}</td>)}
+                      <td>{peso(windowTotal(vals))}</td>
+                      <td><Spark values={vals} /></td>
+                    </tr>
+                  );
+                })}
+                <tr className="total">
+                  <td>Retail total</td>
+                  {systemRetail.map((v, i) => <td key={i}>{peso(v)}</td>)}
+                  <td>{peso(windowTotal(systemRetail))}</td>
+                  <td><Spark values={systemRetail} /></td>
+                </tr>
+                <tr className="group"><td colSpan={d.weeks.length + 3}>Other channels, not in the retail total</td></tr>
+                {others.filter((c) => c.kind === "other").map((c) => {
+                  const vals = c.weeks.map((x) => x.retail);
+                  return (
+                    <tr key={c.channel}>
+                      <td>{BRANCH_NAME[c.channel]}</td>
+                      {vals.map((v, i) => <td key={i} className={i === last ? "now" : ""}>{peso(v)}</td>)}
+                      <td>{peso(windowTotal(vals))}</td>
+                      <td><Spark values={vals} /></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="note">Watsons has no feed. B2B and Events are recorded monthly and stop at the last loaded month.</p>
         </div>
       </div>
-
-      <Card num="01" title="Net sales by week" note="Barbershop net sales per shop. A total is — when any week or shop in it is missing.">
-        <div className="scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Shop</th>
-                {weekHead}
-                <th>Window</th>
-                <th className="l">Trend</th>
-              </tr>
-            </thead>
-            <tbody>
-              {BRANCHES.map((b) => seriesRow(name(b), weeks.map((w) => get(b, w, "net"))))}
-              {seriesRow("F&S System", weeks.map((w) => systemNet(w)), "total")}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
-      <Card
-        num="02"
-        title={`Branch detail · week ending ${day(sel, true)}`}
-        note={
-          <>
-            Per chair = net ÷ chairs. Clients = foot traffic. BAV = barber availability (available ÷ chair-days); BAT = attendance (available ÷
-            scheduled). {prior ? `Change is against week ending ${day(prior)}.` : "No prior week in this window."} BAV and BAT are not
-            combined across branches.
-          </>
-        }
-      >
-        <div className="scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Shop</th>
-                <th>Net</th>
-                <th>vs prior wk</th>
-                <th>Per chair</th>
-                <th>Clients</th>
-                <th>ARPU</th>
-                <th>Retail</th>
-                <th>Retail buyers</th>
-                <th>BAV</th>
-                <th>BAT</th>
-                <th>Chairs</th>
-                <th>Open days</th>
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((r) => detailRow(name(r.code), r))}
-              {detailRow("F&S System", system, "total")}
-            </tbody>
-          </table>
-        </div>
-      </Card>
-
-      <Card num="03" title="Retail by week" note="Shops plus Shopee, Lazada and TikTok make the total. B2B and Events are listed below it and excluded.">
-        <div className="scroll">
-          <table>
-            <thead>
-              <tr>
-                <th>Channel</th>
-                {weekHead}
-                <th>Window</th>
-                <th className="l">Trend</th>
-              </tr>
-            </thead>
-            <tbody>
-              {retailIn.map((c) => seriesRow(name(c), weeks.map((w) => get(c, w, "retail"))))}
-              {seriesRow("Retail total", weeks.map((w) => retailTotal(w)), "total")}
-              <tr className="group">
-                <td>Not in total</td>
-                <td colSpan={weeks.length + 2} />
-              </tr>
-              {retailOut.map((c) => seriesRow(name(c), weeks.map((w) => get(c, w, "retail")), "sub"))}
-            </tbody>
-          </table>
-        </div>
-      </Card>
     </section>
   );
 }

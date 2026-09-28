@@ -1,199 +1,126 @@
-import type { Barber, N, Team } from "@/lib/types";
-import { BRANCHES, DASH, day, daysBetween, manilaToday, name, num, peso, pct } from "@/lib/format";
-import { Card, SectionHead, Spark, Tag, Tile } from "./ui";
+import { Fragment } from "react";
+import type { Team, Barber } from "@/lib/types";
+import { peso, num, pct, dlong, BRANCH_NAME, DASH } from "@/lib/fmt";
+import { Spark } from "./Spark";
 
-const ROLE_ORDER: Record<string, number> = { head: 0, barber: 1, roving: 2 };
+const ORDER = ["BGC", "PPM", "POD", "LEV", "EROD"];
 
-const pretty = (s: string) => (s ? s.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase()) : DASH);
+function daysLeft(iso: string | null, today: string): number | null {
+  if (!iso) return null;
+  return Math.round((Date.parse(iso) - Date.parse(today)) / 86400000);
+}
 
-export default function TeamSection({ team, weeks }: { team: Team; weeks: string[] }) {
-  const barbers = team.barbers ?? [];
-  const hiring = team.hiring ?? [];
-  const today = manilaToday();
+function Row({ b }: { b: Barber }) {
+  const hit = b.arpu != null && b.arpu_target != null ? b.arpu >= b.arpu_target : null;
+  return (
+    <tr>
+      <td>
+        {b.barber}
+        {b.role === "head" ? <> <span className="tag b">Head</span></> : null}
+        {b.roving ? <> <span className="tag">Roving</span></> : null}
+      </td>
+      <td>{peso(b.net)}</td>
+      <td>{num(b.clients)}</td>
+      <td>{peso(b.arpu)}</td>
+      <td>{hit == null ? <span className="dim">{DASH}</span> : <span className={`tag ${hit ? "g" : "a"}`}>{hit ? "On" : "Below"} {peso(b.arpu_target)}</span>}</td>
+      <td>{pct(b.repeat_pct)}</td>
+      <td>{peso(b.retail ?? (b.net != null ? 0 : null))}</td>
+      <td>{b.praise > 0 ? num(b.praise) : <span className="dim">0</span>}</td>
+      <td>{num(b.days)}</td>
+      <td><Spark values={b.weeks.map((w) => w.net)} /></td>
+    </tr>
+  );
+}
 
-  const withNet = barbers.filter((b) => b.net !== null);
-  const scored = barbers.filter((b) => b.arpu !== null && b.arpu_target !== null);
-  const atTarget = scored.filter((b) => (b.arpu as number) >= (b.arpu_target as number));
-
-  const hires = hiring
-    .map((h) => ({ ...h, left: h.fill_by ? daysBetween(today, h.fill_by) : null }))
-    .sort((a, b) => (a.left ?? Infinity) - (b.left ?? Infinity) || a.role.localeCompare(b.role));
-  const overdue = hires.filter((h) => h.left !== null && h.left < 0).length;
-
-  const groups = [
-    ...BRANCHES.map((b) => b as string),
-    ...[...new Set(barbers.map((b) => b.branch))].filter((b) => !(BRANCHES as readonly string[]).includes(b)),
-  ]
-    .map((branch) => ({
-      branch,
-      rows: barbers
-        .filter((b) => b.branch === branch)
-        .sort((a, b) => (ROLE_ORDER[a.role] ?? 9) - (ROLE_ORDER[b.role] ?? 9) || (b.net ?? -1) - (a.net ?? -1)),
-    }))
-    .filter((g) => g.rows.length > 0);
-
-  const spark = (b: Barber): N[] => {
-    const m = new Map(b.weeks.map((w) => [w.we, w.net]));
-    return weeks.map((w) => m.get(w) ?? null);
-  };
-
-  const failed = Object.entries(team.gates ?? {})
-    .flatMap(([branch, list]) => list.filter((g) => !g.ok).map((g) => ({ branch, we: g.we })))
-    .sort((a, b) => a.we.localeCompare(b.we) || BRANCHES.indexOf(a.branch as never) - BRANCHES.indexOf(b.branch as never));
+export function TeamSection({ d, today }: { d: Team; today: string }) {
+  const barbers = d.barbers ?? [];
+  const hiring = d.hiring ?? [];
+  const byBranch = ORDER.map((br) => ({ br, rows: barbers.filter((b) => b.branch === br) })).filter((g) => g.rows.length);
+  const withNet = barbers.filter((b) => b.net != null);
+  const onTarget = withNet.filter((b) => b.arpu != null && b.arpu_target != null && b.arpu >= b.arpu_target).length;
+  const gateMiss = Object.entries(d.gates ?? {}).flatMap(([br, ws]) => ws.filter((w) => !w.ok).map((w) => `${BRANCH_NAME[br]} ${dlong(w.we)}`));
+  const overdue = hiring.filter((h) => { const x = daysLeft(h.fill_by, today); return x != null && x < 0; }).length;
 
   return (
     <section className="section" id="team">
-      <SectionHead id="team-head" kicker="Team" title="Team" note={<>Barber figures cover the {team.n}-week window ending {day(team.end, true)}.</>} />
+      <div className="wrap">
+        <h2>Team</h2>
+        <p className="lede">
+          Barber by barber over the last {d.n} weeks to {dlong(d.end)}. Sales are what the till credited to each barber;
+          clients are his kept bookings in Yodel.
+        </p>
 
-      <div className="tiles">
-        <Tile
-          label="Barbers with a full record"
-          value={team.barbers ? `${withNet.length} / ${barbers.length}` : DASH}
-          sub="One row per barber per branch; roving barbers count at each branch they worked."
-        />
-        <Tile
-          label="At or above ARPU target"
-          value={team.barbers ? `${atTarget.length} / ${scored.length}` : DASH}
-          sub="Barbers with both an ARPU and a target."
-        />
-        <Tile
-          label="Open seats"
-          value={team.hiring ? num(hires.length) : DASH}
-          tag={overdue > 0 ? <Tag tone="red">{overdue} overdue</Tag> : team.hiring ? <Tag tone="green">None overdue</Tag> : undefined}
-          sub={`Days counted from today in Manila, ${day(today, true)}.`}
-        />
-      </div>
-
-      <Card
-        num="08"
-        title="Barbers"
-        note={
-          team.gates === null ? (
-            "No data gate information for this window."
-          ) : failed.length === 0 ? (
-            "Every branch-week in this window passed the data gate."
-          ) : (
-            <>
-              Branch-weeks that failed the data gate, so barber figures there may be incomplete:{" "}
-              {failed.map((f, i) => (
-                <span key={`${f.branch}-${f.we}`}>
-                  {i > 0 ? ", " : ""}
-                  {name(f.branch)} w/e {day(f.we)}
-                </span>
-              ))}
-              .
-            </>
-          )
-        }
-      >
-        {team.barbers === null ? (
-          <div className="card-empty">No barber data for this window.</div>
-        ) : (
-          <div className="scroll">
-            <table>
-              <thead>
-                <tr>
-                  <th>Barber</th>
-                  <th>Net</th>
-                  <th>Clients</th>
-                  <th>ARPU</th>
-                  <th className="l">vs target</th>
-                  <th>Returning</th>
-                  <th>Retail</th>
-                  <th>Praise</th>
-                  <th>Days</th>
-                  <th className="l">Weekly net</th>
-                </tr>
-              </thead>
-              <tbody>
-                {groups.map((g) => [
-                  <tr key={`g-${g.branch}`} className="group">
-                    <td>{name(g.branch)}</td>
-                    <td colSpan={9} />
-                  </tr>,
-                  ...g.rows.map((b) => {
-                    const on = b.arpu !== null && b.arpu_target !== null ? b.arpu >= b.arpu_target : null;
-                    return (
-                      <tr key={`${g.branch}-${b.barber}`}>
-                        <td>
-                          {b.barber}
-                          {b.role === "head" || b.role === "roving" || b.roving || !b.complete ? (
-                            <span className="tags">
-                              {b.role === "head" ? <Tag tone="blue">Head</Tag> : null}
-                              {b.role === "roving" || b.roving ? <Tag tone="grey">Roving</Tag> : null}
-                              {!b.complete ? <Tag tone="amber">Partial</Tag> : null}
-                            </span>
-                          ) : null}
-                        </td>
-                        <td>{peso(b.net)}</td>
-                        <td>{num(b.clients)}</td>
-                        <td>{peso(b.arpu)}</td>
-                        <td className="l">
-                          {on === null ? (
-                            <span className="muted">{DASH}</span>
-                          ) : (
-                            <Tag tone={on ? "green" : "red"}>
-                              {on ? "On" : "Below"} {peso(b.arpu_target)}
-                            </Tag>
-                          )}
-                        </td>
-                        <td>{pct(b.repeat_pct)}</td>
-                        <td>{peso(b.retail)}</td>
-                        <td>{num(b.praise)}</td>
-                        <td>{num(b.days)}</td>
-                        <td className="spark-cell l">
-                          <Spark values={spark(b)} />
-                        </td>
-                      </tr>
-                    );
-                  }),
-                ])}
-              </tbody>
-            </table>
+        <div className="tiles">
+          <div className="tile">
+            <div className="k"><span>Barbers with a full record</span></div>
+            <div className="v">{num(withNet.length)}</div>
+            <div className="s">of {num(barbers.length)} on the roster who cut in this window</div>
           </div>
-        )}
-      </Card>
+          <div className="tile">
+            <div className="k"><span>At or above ARPU target</span></div>
+            <div className="v">{num(onTarget)}</div>
+            <div className="s">Targets by branch: BGC ₱1,000 · PPM ₱950 · POD ₱920 · LEV ₱960 · EROD ₱900</div>
+          </div>
+          <div className="tile">
+            <div className="k"><span>Open seats</span>{overdue ? <span className="tag r">{overdue} overdue</span> : null}</div>
+            <div className="v">{num(hiring.length)}</div>
+            <div className="s">From the For Hire register. Detail below.</div>
+          </div>
+        </div>
 
-      <Card num="09" title="Hiring" note="Amber: due within 14 days. Red: past the fill-by date.">
-        {team.hiring === null || hires.length === 0 ? (
-          <div className="card-empty">{team.hiring === null ? "No hiring data." : "No open seats."}</div>
-        ) : (
-          <div className="scroll">
+        <div className="block">
+          <h3><span className="num">08</span>Barbers<span className="aside">window totals; trend is weekly net sales</span></h3>
+          <div className="tbl">
             <table>
               <thead>
                 <tr>
-                  <th>Role</th>
-                  <th className="l">Branch</th>
-                  <th className="l">Type</th>
-                  <th>Fill by</th>
-                  <th className="l">Days left</th>
+                  <th>Barber</th><th>Net sales</th><th>Clients</th><th>ARPU</th><th>vs target</th>
+                  <th>Returning</th><th>Retail</th><th>Praise</th><th>Days</th><th>Trend</th>
                 </tr>
               </thead>
               <tbody>
-                {hires.map((h, i) => (
-                  <tr key={`${h.role}-${h.branch}-${i}`}>
-                    <td>{h.role}</td>
-                    <td className="l">{name(h.branch)}</td>
-                    <td className="l">{pretty(h.type)}</td>
-                    <td>{h.fill_by ? day(h.fill_by, true) : DASH}</td>
-                    <td className="l">
-                      {h.left === null ? (
-                        <span className="muted">{DASH}</span>
-                      ) : h.left < 0 ? (
-                        <Tag tone="red">{-h.left} days overdue</Tag>
-                      ) : h.left <= 14 ? (
-                        <Tag tone="amber">{h.left} days</Tag>
-                      ) : (
-                        <>{h.left} days</>
-                      )}
-                    </td>
-                  </tr>
+                {byBranch.map((g) => (
+                  <Fragment key={g.br}>
+                    <tr className="group"><td colSpan={10}>{BRANCH_NAME[g.br]}</td></tr>
+                    {g.rows.map((b) => <Row key={g.br + b.barber} b={b} />)}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
           </div>
-        )}
-      </Card>
+          <p className="note">
+            A branch-week publishes barber figures only when the sales ledger covers every open day and at least 95% of the week&apos;s value
+            carries a barber&apos;s name. {gateMiss.length ? <>Held back this window: {gateMiss.join(", ")}.</> : <>Every branch-week in this window passed.</>}
+            {" "}Returning is repeat visits to that barber over his new plus repeat clients. Praise counts Google reviews naming him, matched or
+            confirmed. Roving barbers appear under each branch they worked.
+          </p>
+        </div>
+
+        <div className="block">
+          <h3><span className="num">09</span>Hiring<span className="aside">open seats by fill-by date</span></h3>
+          <div className="tbl">
+            <table>
+              <thead><tr><th>Role</th><th>Branch</th><th>Type</th><th>Fill by</th><th>Days left</th></tr></thead>
+              <tbody>
+                {hiring.map((h, i) => {
+                  const x = daysLeft(h.fill_by, today);
+                  const cls = x == null ? "" : x < 0 ? "r" : x <= 14 ? "a" : "";
+                  return (
+                    <tr key={i}>
+                      <td>{h.role}</td>
+                      <td>{h.branch ? (BRANCH_NAME[h.branch] ?? h.branch) : DASH}</td>
+                      <td>{h.type ?? DASH}</td>
+                      <td>{h.fill_by ? dlong(h.fill_by) : h.status}</td>
+                      <td>{x == null ? <span className="dim">{DASH}</span> : <span className={`tag ${cls}`}>{x < 0 ? `${-x} overdue` : `${x} days`}</span>}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+          <p className="note">Days left counts from today in Manila, not from the selected week.</p>
+        </div>
+      </div>
     </section>
   );
 }

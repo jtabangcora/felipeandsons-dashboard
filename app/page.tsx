@@ -1,110 +1,64 @@
-import Controls from "./Controls";
-import SalesSection from "@/components/SalesSection";
-import CustomersSection from "@/components/CustomersSection";
-import TeamSection from "@/components/TeamSection";
-import { getCustomers, getSales, getTeam, getWeeks } from "@/lib/data";
-import { day } from "@/lib/format";
+import { getWeeks, getSales, getCustomers, getTeam } from "@/lib/data";
+import { dlong } from "@/lib/fmt";
+import { Controls } from "@/components/Controls";
+import { SalesSection } from "@/components/SalesSection";
+import { CustomersSection } from "@/components/CustomersSection";
+import { TeamSection } from "@/components/TeamSection";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const WINDOWS = [4, 8, 13, 26];
+const LOGO = "https://fs-barber-portal-v2.vercel.app/fs-logo.png";
 
-type SP = Promise<Record<string, string | string[] | undefined>>;
-
-const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
-
-function Failed({ id, title, err }: { id: string; title: string; err: unknown }) {
-  console.error(`[${id}]`, err);
-  return (
-    <section className="section" id={id}>
-      <header className="section-head">
-        <div className="label">{title}</div>
-        <h2>{title}</h2>
-      </header>
-      <div className="error">Could not load {title.toLowerCase()} data. Try again shortly.</div>
-    </section>
-  );
+function manilaToday(): string {
+  return new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
 }
 
-export default async function Page({ searchParams }: { searchParams: SP }) {
+export default async function Page({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
   const sp = await searchParams;
-
   let weeks: string[] = [];
-  let weeksErr: unknown = null;
   try {
     weeks = await getWeeks();
   } catch (e) {
-    weeksErr = e;
+    return <div className="wrap"><div className="err">Could not reach F&amp;S Databases: {(e as Error).message}</div></div>;
   }
+  const we = sp.we && weeks.includes(sp.we) ? sp.we : weeks[0];
+  const nRaw = Number(sp.n);
+  const n = [4, 8, 13, 26].includes(nRaw) ? nRaw : 8;
 
-  const wantWe = one(sp.we);
-  const we = wantWe && weeks.includes(wantWe) ? wantWe : weeks[0];
-  const wantN = Number(one(sp.n));
-  const n = WINDOWS.includes(wantN) ? wantN : 8;
-
-  const [sales, cust, team] = we
-    ? await Promise.allSettled([getSales(we, n), getCustomers(we, n), getTeam(we, n)])
-    : [null, null, null];
-
-  const salesOk = sales?.status === "fulfilled" ? sales.value : null;
-  const dataThrough = salesOk?.data_through ?? null;
-  const windowWeeks = salesOk ? [...salesOk.weeks].sort() : [];
+  const [sales, customers, team] = await Promise.all([getSales(we, n), getCustomers(we, n), getTeam(we, n)]);
 
   return (
     <>
-      <header className="top">
-        <div className="wrap top-inner">
-          <div className="brand">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="https://fs-barber-portal-v2.vercel.app/fs-logo.png" alt="Felipe and Sons" width={40} height={40} />
-            <div>
-              <div className="label">Felipe and Sons</div>
-              <h1>F&amp;S Dashboard</h1>
-            </div>
+      <header className="wrap top">
+        <div className="brand">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={LOGO} alt="Felipe and Sons Barberdashery" />
+          <div>
+            <h1>F&amp;S Dashboard</h1>
+            <div className="sub">Sales · Customers · Team · live from F&amp;S Databases</div>
           </div>
-          {we ? <Controls weeks={weeks.map((w) => ({ value: w, label: day(w, true) }))} we={we} n={n} /> : null}
         </div>
+        <Controls weeks={weeks} we={we} n={n} />
       </header>
-
-      <nav className="nav" aria-label="Sections">
-        <div className="wrap nav-inner">
-          <div className="nav-links">
-            <a href="#sales">Sales</a>
-            <a href="#customers">Customers</a>
-            <a href="#team">Team</a>
-          </div>
-          {we ? (
-            <span className="label">
-              Week ending {day(we, true)} · {n} weeks · data to {day(dataThrough, true)}
-            </span>
-          ) : null}
+      <nav className="nav">
+        <div className="wrap">
+          <a href="#sales">Sales</a>
+          <a href="#customers">Customers</a>
+          <a href="#team">Team</a>
+          <span className="asof">Week ending {dlong(we)} · {n} weeks · data to {dlong(sales.data_through)}</span>
         </div>
       </nav>
-
-      <main className="wrap">
-        {!we ? (
-          <div className="error">{weeksErr ? "Could not reach the database. Try again shortly." : "No complete weeks in the database yet."}</div>
-        ) : (
-          <>
-            {sales?.status === "fulfilled" ? <SalesSection sales={sales.value} /> : <Failed id="sales" title="Sales" err={sales?.reason} />}
-            {cust?.status === "fulfilled" ? (
-              <CustomersSection cust={cust.value} />
-            ) : (
-              <Failed id="customers" title="Customers" err={cust?.reason} />
-            )}
-            {team?.status === "fulfilled" ? (
-              <TeamSection team={team.value} weeks={windowWeeks.length ? windowWeeks : [...new Set((team.value.barbers ?? []).flatMap((b) => b.weeks.map((w) => w.we)))].sort()} />
-            ) : (
-              <Failed id="team" title="Team" err={team?.reason} />
-            )}
-          </>
-        )}
-        <footer className="foot muted small">
-          Felipe and Sons · F&amp;S System = BGC, Power Plant, Podium, Leviste and E. Rodriguez. — means the figure is missing, never zero.
-          Figures refresh hourly.
-        </footer>
+      <main>
+        <SalesSection d={sales} />
+        <div className="wrap"><div className="divider" /></div>
+        <CustomersSection d={customers} weeks={sales.weeks} />
+        <div className="wrap"><div className="divider" /></div>
+        <TeamSection d={team} today={manilaToday()} />
       </main>
+      <footer className="wrap foot">
+        Felipe and Sons Barberdashery · figures refresh hourly from Supabase · a dash means the source is missing a day, never zero
+      </footer>
     </>
   );
 }
