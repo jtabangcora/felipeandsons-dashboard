@@ -368,28 +368,24 @@ tr.sep td{ height: 12px; border-bottom: 1px solid var(--rule-2); background: var
 }
 .cell .pt .pv.none{ color: var(--ink-4); }
 
-/* retention cell — the return rate is the headline the eye scans for, so it leads,
-   large, under a small "returning" tag; the counts that compose it sit below, each
-   labelled and lighter. one figure to read at a glance, its evidence underneath. */
-.cell .ret{ display: flex; flex-direction: column; align-items: flex-end; gap: 2px; width: 100%; min-width: 118px; }
-.cell .ret-hero{ display: flex; flex-direction: column; align-items: flex-end; line-height: 1.04; margin-bottom: 4px; }
-.cell .ret-hero .rv{
-  font-family: var(--ffm); font-variant-numeric: tabular-nums; font-size: 15px; font-weight: 600;
+/* retention cell — the return rate is highlighted as the one figure to read at a
+   glance (a neutral pill: emphasis, never a hue that encodes the number); the
+   counts that compose it sit beneath in a light, compact caption. */
+.cell .ret{ display: flex; flex-direction: column; align-items: flex-end; gap: 1px; width: 100%; min-width: 96px; }
+.cell .ret .rv{
+  font-family: var(--ffm); font-variant-numeric: tabular-nums; font-size: 12px; font-weight: 600;
   color: var(--ink); letter-spacing: -0.01em;
+  background: var(--pale-neutral); padding: 1px 7px; border-radius: 9999px; margin-bottom: 3px;
 }
-.cell.big .ret-hero .rv{ font-size: 17px; }
-.cell .ret-hero .rv.none{ color: var(--ink-4); font-weight: 400; }
-.cell .ret-hero .rl{
-  font-family: var(--ffm); font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--ink-4); margin-top: 1px;
-}
-.cell .ret .rc{ display: flex; align-items: baseline; justify-content: space-between; gap: 12px; width: 100%; }
+.cell.big .ret .rv{ font-size: 13px; }
+.cell .ret .rv.none{ color: var(--ink-4); font-weight: 400; background: transparent; padding: 1px 0; }
+.cell .ret .rc{ display: flex; align-items: baseline; justify-content: space-between; gap: 10px; width: 100%; }
 .cell .ret .rc i{
-  font-style: normal; font-family: var(--ffm); font-size: 8.5px; letter-spacing: 0.07em;
+  font-style: normal; font-family: var(--ffm); font-size: 8px; letter-spacing: 0.05em;
   text-transform: uppercase; color: var(--ink-4); white-space: nowrap;
 }
 .cell .ret .rc b{
-  font-family: var(--ffm); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 400; color: var(--ink-2);
+  font-family: var(--ffm); font-variant-numeric: tabular-nums; font-size: 10px; font-weight: 400; color: var(--ink-3);
 }
 .cell .ret .rc b.none{ color: var(--ink-4); }
 
@@ -1730,9 +1726,8 @@ function retHTML(fmt, v){
   const counts = (fmt==='ret3')
     ? [['New', v?v[0]:null], ['Repeat', v?v[1]:null]]
     : [['New to branch', v?v[0]:null], ['New to barber', v?v[1]:null], ['Repeat', v?v[2]:null]];
-  let s = '<span class="ret"><span class="ret-hero">'
-        + '<span class="rv'+(rate==null?' none':'')+'">'+pd(rate)+'</span>'
-        + '<span class="rl">returning</span></span>';
+  let s = '<span class="ret">'
+        + '<span class="rv'+(rate==null?' none':'')+'">'+pd(rate)+'</span>';
   counts.forEach(function(c){
     s += '<span class="rc"><i>'+c[0]+'</i>'
        + '<b'+(c[1]==null?' class="none"':'')+'>'+nd(c[1])+'</b></span>';
