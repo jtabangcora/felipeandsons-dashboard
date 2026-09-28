@@ -177,6 +177,32 @@ body{
   color: var(--ink-4); margin: 40px 0 12px;
 }
 
+/* ---------------- unit tabs ---------------- */
+/* one business unit visible at a time. the tab bar stands in for the old
+   stacked unit rules; those are hidden once scripting takes over. */
+.unit-tabs{
+  display: flex; flex-wrap: wrap; gap: 2px;
+  margin: 44px 0 4px; border-bottom: 1px solid var(--rule-2);
+}
+.unit-tabs button{
+  appearance: none; background: transparent; border: 0; cursor: pointer;
+  font-family: var(--fs); font-size: 17px; font-weight: 400; color: var(--ink-3);
+  letter-spacing: -0.015em; padding: 8px 20px 14px; position: relative;
+  transition: color .2s var(--ease);
+}
+.unit-tabs button:hover{ color: var(--ink); }
+.unit-tabs button.on{ color: var(--ink); font-weight: 500; }
+.unit-tabs button.on::after{
+  content: ""; position: absolute; left: 12px; right: 12px; bottom: -1px; height: 2px;
+  background: var(--ink); border-radius: 1px;
+}
+.unit-tabs button:focus-visible{ outline: 2px solid var(--ink); outline-offset: 2px; border-radius: var(--r-xs); }
+.tabs-on .unit-rule{ display: none; }
+.unit-panel[hidden]{ display: none; }
+@media (max-width: 760px){
+  .unit-tabs button{ font-size: 15px; padding: 7px 12px 12px; }
+}
+
 /* ---------------- controls ---------------- */
 .controls{
   display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px;
@@ -597,15 +623,15 @@ table.g.inertT td{ height: 32px; }
       <span class="wm-t">Sales Dashboard</span>
     </span>
     <nav id="nav">
-      <a href="#m-netsales">Net Sales</a>
-      <a href="#m-arpu">ARPU</a>
-      <a href="#m-avail">Barber Availability</a>
-      <a href="#m-traffic">Foot Traffic</a>
-      <a href="#m-retention">Retention</a>
-      <a href="#m-retail">Retail Net Sales</a>
-      <a href="#m-conversion">Conversion Rate</a>
-      <a href="#m-hbd-sales">Haberdashery</a>
-      <a href="#m-hbd-pipeline">Pipeline</a>
+      <a href="#m-netsales" data-unit="barbershop">Net Sales</a>
+      <a href="#m-arpu" data-unit="barbershop">ARPU</a>
+      <a href="#m-avail" data-unit="barbershop">Barber Availability</a>
+      <a href="#m-traffic" data-unit="barbershop">Foot Traffic</a>
+      <a href="#m-retention" data-unit="barbershop">Retention</a>
+      <a href="#m-retail" data-unit="retail">Retail Net Sales</a>
+      <a href="#m-conversion" data-unit="retail">Conversion Rate</a>
+      <a href="#m-hbd-sales" data-unit="haberdashery">Haberdashery</a>
+      <a href="#m-hbd-pipeline" data-unit="haberdashery">Pipeline</a>
     </nav>
   </div>
   <div class="mast-sub" id="periodbar"></div>
@@ -620,15 +646,21 @@ table.g.inertT td{ height: 32px; }
     <div class="meta" id="herometa"></div>
   </header>
 
-  <div id="unit-barbershop"></div>
+  <nav class="unit-tabs" id="unittabs" aria-label="Business unit">
+    <button type="button" data-unit="barbershop" class="on">Barbershop</button>
+    <button type="button" data-unit="retail">Retail</button>
+    <button type="button" data-unit="haberdashery">Haberdashery</button>
+  </nav>
+
+  <div class="unit-panel" id="unit-barbershop"></div>
 
   <div class="unit-rule">Retail</div>
 
-  <div id="unit-retail"></div>
+  <div class="unit-panel" id="unit-retail"></div>
 
   <div class="unit-rule">Haberdashery</div>
 
-  <div id="unit-haberdashery"></div>
+  <div class="unit-panel" id="unit-haberdashery"></div>
 
   <footer class="pagefoot">
     <span>Felipe and Sons Barberdashery &middot; Sales Dashboard &middot; working file &middot; no figures loaded</span>
@@ -2782,3 +2814,43 @@ const UH = document.getElementById('unit-haberdashery');
 })();
 
 </script>
+
+<script>
+"use strict";
+/* ============================================================
+   6 · UNIT TABS
+   One business unit visible at a time. The tab bar stands in for
+   the stacked unit rules; the metric nav narrows to the active
+   unit so its anchors never point at a hidden section.
+   ============================================================ */
+(function(){
+  const PANELS = {
+    barbershop:   document.getElementById('unit-barbershop'),
+    retail:       document.getElementById('unit-retail'),
+    haberdashery: document.getElementById('unit-haberdashery')
+  };
+  const tabs = Array.from(document.querySelectorAll('.unit-tabs button'));
+  const navLinks = Array.from(document.querySelectorAll('.mast a[data-unit]'));
+  document.body.classList.add('tabs-on');
+
+  function activate(unit, userAction){
+    Object.keys(PANELS).forEach(u=>{
+      const on = u===unit;
+      PANELS[u].hidden = !on;
+      /* a panel revealed by a tab click never scrolled into view, so its
+         sections must be un-hidden here rather than waiting on the observer */
+      if(on && userAction) PANELS[u].querySelectorAll('.sec').forEach(s=>s.classList.add('in'));
+    });
+    tabs.forEach(t=> t.classList.toggle('on', t.getAttribute('data-unit')===unit));
+    navLinks.forEach(a=>{ a.style.display = a.getAttribute('data-unit')===unit ? '' : 'none'; });
+    if(userAction){
+      const tb = document.getElementById('unittabs');
+      if(tb) tb.scrollIntoView({behavior:'smooth', block:'start'});
+    }
+  }
+
+  tabs.forEach(t=> t.addEventListener('click', ()=> activate(t.getAttribute('data-unit'), true)));
+  activate('barbershop', false);
+})();
+</script>
+
