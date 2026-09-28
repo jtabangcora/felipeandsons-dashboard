@@ -1,0 +1,866 @@
+<title>F&S Staff Metrics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500;600&family=Archivo:wght@700;800&display=swap">
+<style>
+/* ============================================================
+   F&S OPERATING GRID
+   Editorial minimalism. Warm bone canvas, charcoal ink,
+   hairline rules, pastel reserved for meaning.
+   Newsreader for language, JetBrains Mono for every figure.
+   Colour never touches a number: direction in the grid is
+   still weight and arrow, so the reader is not asked to
+   decode a hue to find a problem.
+   ============================================================ */
+
+:root{
+  /* warm monochrome */
+  --canvas:  #F7F6F3;
+  --card:    #FFFFFF;
+  --card-2:  #FBFBFA;
+  --head:    #F7F6F3;
+  --now:     #F2F1ED;
+  --now-2:   #EDEBE6;
+  --hover:   #FAFAF8;
+  --band:    #FCFCFB;
+
+  --ink:     #1A1A18;
+  --ink-2:   #4A4945;
+  --ink-3:   #787774;
+  --ink-4:   #A6A49E;
+
+  --rule:    #EAEAEA;
+  --rule-2:  #E0DFDA;
+  --rule-3:  #C4C2BB;
+  --edit:    #F1EFE9;
+  --sel:     #1A1A18;
+  --sel-fg:  #FFFFFF;
+
+  /* pastel, semantic only */
+  --pale-green:#EDF3EC; --ink-green:#346538;
+  --pale-red:  #FDEBEC; --ink-red:  #9F2F2D;
+  --pale-amber:#FBF3DB; --ink-amber:#956400;
+  --pale-blue: #E1F3FE; --ink-blue: #1F6C9F;
+  --pale-neutral:#F1F0EC;
+
+  --lift:    0 1px 2px rgba(26,26,24,.03);
+  --lift-2:  0 2px 8px rgba(26,26,24,.04);
+
+  --r-lg: 12px;
+  --r-md: 8px;
+  --r-sm: 6px;
+  --r-xs: 4px;
+
+  --ff:  -apple-system, "SF Pro Display", "Helvetica Neue", "Segoe UI", Helvetica, Arial, sans-serif;
+  --fs:  "Newsreader", "Lyon Text", Georgia, "Times New Roman", serif;
+  --ffm: "JetBrains Mono", "SF Mono", ui-monospace, Menlo, Consolas, monospace;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --pad: 56px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --canvas:#141311; --card:#1C1B19; --card-2:#201F1C; --head:#211F1C;
+    --now:#2A2825; --now-2:#332F2B; --hover:#242220; --band:#1F1E1B;
+    --ink:#F5F3EF; --ink-2:#C9C6BF; --ink-3:#96938C; --ink-4:#6E6B65;
+    --rule:#2C2A27; --rule-2:#3A3733; --rule-3:#5E5A54;
+    --edit:#332F2B; --sel:#F5F3EF; --sel-fg:#141311;
+    --pale-green:#22301F; --ink-green:#A6CFA0;
+    --pale-red:#33211F; --ink-red:#E2A8A2;
+    --pale-amber:#302713; --ink-amber:#DCBB6E;
+    --pale-blue:#17262F; --ink-blue:#93C4E2;
+    --pale-neutral:#262421;
+    --lift: 0 1px 2px rgba(0,0,0,.4);
+    --lift-2: 0 2px 8px rgba(0,0,0,.5);
+  }
+}
+:root[data-theme="dark"]{
+  --canvas:#141311; --card:#1C1B19; --card-2:#201F1C; --head:#211F1C;
+  --now:#2A2825; --now-2:#332F2B; --hover:#242220; --band:#1F1E1B;
+  --ink:#F5F3EF; --ink-2:#C9C6BF; --ink-3:#96938C; --ink-4:#6E6B65;
+  --rule:#2C2A27; --rule-2:#3A3733; --rule-3:#5E5A54;
+  --edit:#332F2B; --sel:#F5F3EF; --sel-fg:#141311;
+  --pale-green:#22301F; --ink-green:#A6CFA0;
+  --pale-red:#33211F; --ink-red:#E2A8A2;
+  --pale-amber:#302713; --ink-amber:#DCBB6E;
+  --pale-blue:#17262F; --ink-blue:#93C4E2;
+  --pale-neutral:#262421;
+  --lift: 0 1px 2px rgba(0,0,0,.4);
+  --lift-2: 0 2px 8px rgba(0,0,0,.5);
+}
+
+*, *::before, *::after{ box-sizing: border-box; }
+
+body{
+  margin:0; background: var(--canvas); color: var(--ink);
+  font-family: var(--ff); font-size: 13.5px; line-height: 1.6;
+  letter-spacing: -0.005em;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+}
+::selection{ background: var(--sel); color: var(--sel-fg); }
+
+/* a single, very slow warm light behind the page. never over a scrolling grid. */
+.ambient{
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(60rem 40rem at 12% -5%, rgba(149,100,0,.035), transparent 60%),
+    radial-gradient(50rem 36rem at 92% 8%, rgba(31,108,159,.028), transparent 62%);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .ambient{ opacity:.5; } }
+:root[data-theme="dark"] .ambient{ opacity:.5; }
+
+.num, table.g td .v, table.g td.trail{ font-family: var(--ffm); font-variant-numeric: tabular-nums; }
+
+/* ---------------- masthead ---------------- */
+.mast{
+  position: sticky; top: 0; z-index: 50;
+  background: color-mix(in srgb, var(--canvas) 92%, transparent);
+  backdrop-filter: saturate(180%) blur(14px); -webkit-backdrop-filter: saturate(180%) blur(14px);
+  border-bottom: 1px solid var(--rule); padding: 0 var(--pad);
+}
+.mast-row{ display: flex; align-items: center; gap: 32px; max-width: 1680px; margin: 0 auto; min-height: 60px; }
+.mast .wm{
+  font-family: var(--fs); font-size: 17px; font-weight: 500; letter-spacing: -0.02em;
+  white-space: nowrap; display: flex; align-items: center; gap: 11px; color: var(--ink);
+}
+.mast .wm::before{
+  content:""; width: 9px; height: 9px; border-radius: 2px;
+  background: var(--ink); flex: none; transform: rotate(45deg);
+}
+.mast nav{ display: flex; gap: 1px; overflow-x: auto; margin-left: auto; padding: 4px 0; min-width: 0; }
+.mast nav::-webkit-scrollbar{ height: 0; }
+.mast a{
+  flex: none; padding: 5px 11px; font-size: 12.5px; font-weight: 400; color: var(--ink-3);
+  text-decoration: none; white-space: nowrap; border-radius: var(--r-sm);
+  transition: color .2s var(--ease), background .2s var(--ease);
+}
+.mast a:hover{ color: var(--ink); background: var(--pale-neutral); }
+.mast a:focus-visible{ outline: 2px solid var(--ink); outline-offset: 1px; }
+.mast a.on{ color: var(--ink); background: var(--pale-neutral); font-weight: 500; }
+
+.wrap{ max-width: 1680px; margin: 0 auto; padding: 0 var(--pad) 120px; position: relative; z-index: 1; }
+
+.strap{
+  font-size: 14.5px; color: var(--ink-2); line-height: 1.75; max-width: 76ch;
+  padding: 56px 0 0; margin: 0; font-family: var(--fs); font-weight: 400;
+}
+.strap b{ color: var(--ink); font-weight: 500; }
+
+/* ---------------- section ---------------- */
+.sec{ padding-top: 88px; scroll-margin-top: 76px; }
+.sec-head{
+  display: flex; align-items: baseline; justify-content: space-between; gap: 24px;
+  flex-wrap: wrap; padding-bottom: 16px; margin-bottom: 20px;
+  border-bottom: 1px solid var(--rule-2);
+}
+.sec-head h2{
+  margin: 0; font-family: var(--fs); font-size: 30px; font-weight: 400;
+  letter-spacing: -0.025em; line-height: 1.1; text-wrap: balance;
+  display: flex; align-items: baseline; gap: 14px; color: var(--ink);
+}
+.sec-head h2 .n{
+  font-family: var(--ffm); font-size: 10.5px; font-weight: 500; color: var(--ink-4);
+  letter-spacing: 0.1em; position: relative; top: -2px;
+}
+.sec-head .src{
+  font-family: var(--ffm); font-size: 10px; color: var(--ink-4);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+
+.unit-rule{
+  margin-top: 104px; padding-top: 28px; border-top: 1px solid var(--rule-2);
+  font-family: var(--ffm); font-size: 10px; font-weight: 500;
+  letter-spacing: 0.28em; text-transform: uppercase; color: var(--ink-4);
+}
+.sub-label{
+  font-family: var(--ffm); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-4); margin: 40px 0 12px;
+}
+
+/* ---------------- controls ---------------- */
+.controls{
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 24px;
+  padding: 13px 16px; margin-bottom: 14px;
+  border: 1px solid var(--rule); border-radius: var(--r-md);
+  background: var(--card); box-shadow: var(--lift);
+}
+.ctrl{ display: flex; align-items: center; gap: 10px; }
+.ctrl > label{
+  font-family: var(--ffm); font-size: 9.5px; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--ink-4);
+}
+.seg{
+  display: flex; background: var(--canvas); border-radius: var(--r-sm); padding: 2px;
+  border: 1px solid var(--rule);
+}
+.seg button{
+  appearance: none; background: transparent; border: 0; border-radius: var(--r-xs);
+  color: var(--ink-2); cursor: pointer; font-family: var(--ff); font-size: 12px; font-weight: 400;
+  padding: 5px 12px; transition: all .2s var(--ease); white-space: nowrap;
+}
+.seg button:hover{ background: var(--card); color: var(--ink); }
+.seg button:active{ transform: scale(.98); }
+.seg button:focus-visible{ outline: 2px solid var(--ink); outline-offset: 1px; }
+.seg button.on{ background: var(--sel); color: var(--sel-fg); font-weight: 500; }
+select.pick{
+  appearance: none; background-color: var(--card); border: 1px solid var(--rule-2); border-radius: var(--r-sm);
+  color: var(--ink); font-family: var(--ff); font-size: 12px; font-weight: 400;
+  padding: 6px 28px 6px 11px; cursor: pointer; transition: border-color .2s var(--ease);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='6'%3E%3Cpath d='M0.5 1L4.5 5L8.5 1' fill='none' stroke='%23787774' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+}
+select.pick:hover{ border-color: var(--rule-3); }
+select.pick:focus-visible{ outline: 2px solid var(--ink); outline-offset: 1px; }
+.ghost{
+  appearance: none; background: var(--card); border: 1px solid var(--rule-2); border-radius: var(--r-sm);
+  color: var(--ink-2); cursor: pointer; font-family: var(--ff); font-size: 11.5px; font-weight: 400;
+  padding: 6px 13px; transition: all .2s var(--ease);
+}
+.ghost:hover{ background: var(--sel); color: var(--sel-fg); border-color: var(--sel); }
+.ghost:active{ transform: scale(.98); }
+.ghost:focus-visible{ outline: 2px solid var(--ink); outline-offset: 1px; }
+.ghost[disabled]{ opacity: .35; cursor: default; }
+.ghost[disabled]:hover{ background: var(--card); color: var(--ink-2); border-color: var(--rule-2); transform:none; }
+
+/* ---------------- the grid ---------------- */
+.gridframe{
+  position: relative; overflow: hidden;
+  border: 1px solid var(--rule); border-radius: var(--r-lg);
+  background: var(--card); box-shadow: var(--lift);
+  transition: box-shadow .2s var(--ease);
+}
+.gridframe:hover{ box-shadow: var(--lift-2); }
+.gridwrap{ overflow-x: auto; overflow-y: visible; background: var(--card); }
+.gridwrap::-webkit-scrollbar{ height: 10px; }
+.gridwrap::-webkit-scrollbar-track{ background: var(--card-2); }
+.gridwrap::-webkit-scrollbar-thumb{ background: var(--rule-2); border-radius: 5px; border: 3px solid var(--card-2); }
+.gridwrap::-webkit-scrollbar-thumb:hover{ background: var(--ink-4); }
+
+table.g{ border-collapse: collapse; width: 100%; min-width: 920px; }
+table.g th, table.g td{ padding: 0; }
+
+table.g thead th{
+  position: sticky; top: 0; z-index: 3; background: var(--head);
+  border-bottom: 1px solid var(--rule-2);
+  font-family: var(--ffm); font-weight: 400; font-size: 10px; color: var(--ink-3);
+  padding: 13px 14px; text-align: right; white-space: nowrap; vertical-align: bottom;
+  letter-spacing: 0.02em;
+}
+table.g thead th.lbl{
+  text-align: left; z-index: 5; left: 0; padding-left: 20px;
+  white-space: normal; line-height: 1.55;
+  font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-4);
+}
+table.g thead th .hd-sub{ display:block; font-size: 8.5px; color: var(--ink-4); margin-top: 4px; }
+table.g thead th.now{
+  font-weight: 600; color: var(--ink); background: var(--now-2);
+  box-shadow: inset 1px 0 0 var(--rule-3), inset -1px 0 0 var(--rule-3);
+}
+table.g thead th.trail{ color: var(--ink-4); }
+
+table.g td{
+  border-bottom: 1px solid var(--rule);
+  font-size: 11.5px; text-align: right; padding: 9px 14px; white-space: nowrap; vertical-align: middle;
+}
+table.g tbody tr:last-child td{ border-bottom: 0; }
+/* the label column is fixed width, so a long row name plus its tag wraps inside it
+   rather than running under the first figure. nothing is trimmed to make it fit. */
+table.g td.lbl{ text-align: left; padding-left: 20px; position: sticky; left: 0; z-index: 2; white-space: normal; }
+/* one fixed left column across every grid on the page, so the eye keeps its place */
+table.g th.lbl, table.g td.lbl{ width: 300px; min-width: 300px; max-width: 300px; }
+table.g th.lbl, table.g td.lbl{ background-color: var(--card); box-shadow: 1px 0 0 var(--rule); }
+table.g thead th.lbl{ background-color: var(--head); }
+table.g td.now{ background: var(--now); box-shadow: inset 1px 0 0 var(--rule-2), inset -1px 0 0 var(--rule-2); }
+
+tr.r:hover td{ background-color: var(--hover); }
+tr.r:hover td.lbl{ background-color: var(--hover); }
+tr.r:hover td.now{ background-color: var(--now-2); }
+
+tr.lv0 td{ background-color: var(--band); border-bottom: 1px solid var(--rule-2); }
+tr.lv0 td.lbl{ background-color: var(--band); }
+tr.lv0 .v{ font-weight: 600; }
+tr.lv0 .rowname .nm{
+  font-family: var(--ffm); font-size: 10px; font-weight: 500;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink);
+}
+tr.lv1 td.lbl{ padding-left: 38px; }
+tr.lv2 td{ font-size: 11px; }
+tr.lv2 td.lbl{ padding-left: 60px; }
+tr.lv3 td{ font-size: 11px; }
+tr.lv3 td.lbl{ padding-left: 82px; }
+tr.lv3 .rowname .nm{ color: var(--ink-3); }
+tr.lv2 .rowname .nm{ color: var(--ink-2); }
+tr.sep td{ height: 12px; border-bottom: 1px solid var(--rule-2); background: var(--card) !important; box-shadow: none; padding: 0; }
+
+.rowname{ display: flex; align-items: center; gap: 8px; flex-wrap: wrap; row-gap: 5px; }
+.rowname .nm{ font-size: 13px; font-weight: 400; letter-spacing: -0.008em; }
+.tw{
+  flex: none; width: 17px; height: 17px; display: inline-grid; place-items: center;
+  border: 1px solid var(--rule-2); border-radius: var(--r-xs);
+  background: var(--card); color: var(--ink-3);
+  font-family: var(--ffm); font-size: 10px; line-height: 1; cursor: pointer; padding: 0;
+  transition: all .2s var(--ease);
+}
+.tw:hover{ background: var(--sel); color: var(--sel-fg); border-color: var(--sel); }
+.tw:focus-visible{ outline: 2px solid var(--ink); outline-offset: 1px; }
+.tw.spacer{ border-color: transparent; background: transparent; cursor: default; visibility: hidden; }
+/* a tag names a state, so it may carry a pastel. a figure never does. */
+.rowname .tagx{
+  font-family: var(--ffm); font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase;
+  color: var(--ink-3); background: var(--pale-neutral);
+  padding: 2px 8px; border-radius: 9999px; white-space: nowrap;
+}
+.cov{
+  font-family: var(--ffm); font-size: 9px; letter-spacing: 0.04em;
+  color: var(--ink-amber); background: var(--pale-amber);
+  padding: 2px 8px; border-radius: 9999px; white-space: nowrap;
+}
+
+/* the cell — direction by arrow, severity by weight, never by hue */
+.cell{ display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.cell .v{ line-height: 1.2; font-size: 11.5px; }
+.cell .m{ font-family: var(--ffm); font-size: 9px; line-height: 1.1; color: var(--ink-3); }
+.m.up{ color: var(--ink-3); }
+.m.dn{ color: var(--ink); font-weight: 600; }
+.m.flat{ color: var(--ink-4); }
+.v.mv.up{ color: var(--ink-3); }
+.v.mv.dn{ color: var(--ink); font-weight: 600; }
+.v.mv.flat{ color: var(--ink-4); }
+.cell .v.none{ color: var(--ink-4); }
+
+td.editable .v{ cursor: text; border-bottom: 1px dotted var(--rule-3); border-radius: 0; }
+td.editable:hover .v{ border-bottom: 1px solid var(--ink); }
+td.editable .v:focus{ outline: 2px solid var(--ink); outline-offset: 2px; border-radius: var(--r-xs); }
+td.edited{ background: var(--edit) !important; }
+td.edited .v{ font-style: italic; text-decoration: underline; text-underline-offset: 2px; }
+
+td.trail{ color: var(--ink-2); font-size: 10.5px; border-left: 1px solid var(--rule); }
+
+tr.fence-brass td.lbl{ box-shadow: inset 3px 0 0 var(--ink-amber), 1px 0 0 var(--rule); }
+tr.fence-alarm td.lbl{ box-shadow: inset 3px 0 0 var(--ink-red), 1px 0 0 var(--rule); }
+tr.fence-head td{ background: var(--head); }
+tr.fence-head td.lbl{ background: var(--head); }
+
+/* ---------------- target block ---------------- */
+.split{ display: grid; grid-template-columns: minmax(0,1fr) 300px; gap: 20px; align-items: start; }
+.split > *{ min-width: 0; }
+@media (max-width: 1280px){ .split{ grid-template-columns: minmax(0,1fr); } }
+.tblock{
+  position: sticky; top: 76px; border: 1px solid var(--rule); border-radius: var(--r-lg);
+  background: var(--card); box-shadow: var(--lift); overflow: hidden;
+}
+.tblock h3{
+  margin: 0; padding: 13px 18px; font-family: var(--ffm); font-size: 9.5px; font-weight: 500;
+  letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink);
+  background: var(--head); border-bottom: 1px solid var(--rule);
+}
+.tb-grp{ border-bottom: 1px solid var(--rule); padding: 15px 18px; }
+.tb-grp .gl{
+  font-family: var(--ffm); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-4); margin-bottom: 10px;
+}
+.tb-row{ display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 4px 0; }
+.tb-row .k{ font-size: 12.5px; color: var(--ink-3); }
+.tb-row .v{ font-family: var(--ffm); font-size: 11.5px; font-variant-numeric: tabular-nums; color: var(--ink); }
+/* a verdict is a judgement, not a measurement, so it is the one place a pastil earns its keep */
+.tb-row .v.up, .tb-row .v.dn, .tb-row .v.par{
+  padding: 2px 9px; border-radius: 9999px; font-size: 10.5px; letter-spacing: .01em;
+}
+.tb-row .v.up{ background: var(--pale-green); color: var(--ink-green); }
+.tb-row .v.dn{ background: var(--pale-red);   color: var(--ink-red); font-weight: 500; }
+.tb-row .v.par{ background: var(--pale-neutral); color: var(--ink-3); }
+.tb-proj{ padding: 16px 18px; background: var(--band); }
+.tb-proj .pl{ font-size: 12px; color: var(--ink-3); }
+.tb-proj .pv{ font-family: var(--ffm); font-size: 22px; font-weight: 500; letter-spacing: -0.03em; margin: 7px 0 5px; color: var(--ink); }
+.tb-proj .pn{ font-family: var(--ffm); font-size: 10.5px; }
+.tb-proj .pn.up{ color: var(--ink-green); }
+.tb-proj .pn.dn{ color: var(--ink-red); }
+.tb-proj .foot{
+  font-family: var(--ffm); font-size: 9px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--ink-4); margin-top: 11px;
+}
+.tb-note{
+  font-size: 11.5px; color: var(--ink-3); line-height: 1.55; padding: 5px 0;
+  border-top: 1px dotted var(--rule-2); margin-top: 5px;
+}
+.tb-grp .tb-note:first-of-type{ border-top: 0; margin-top: 0; }
+
+/* ---------------- reference tables ---------------- */
+table.ref{
+  border-collapse: separate; border-spacing: 0; width: 100%;
+  border: 1px solid var(--rule); border-radius: var(--r-lg);
+  background: var(--card); box-shadow: var(--lift); overflow: hidden;
+}
+table.ref th{
+  text-align: left; font-family: var(--ffm); font-size: 9.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-4); font-weight: 400; padding: 13px 20px;
+  background: var(--head); border-bottom: 1px solid var(--rule);
+}
+table.ref td{ padding: 16px 20px; border-bottom: 1px solid var(--rule); font-size: 13px; vertical-align: top; line-height: 1.65; color: var(--ink-2); }
+table.ref tr:last-child td{ border-bottom: 0; }
+table.ref tbody tr:hover td{ background: var(--hover); }
+table.ref td.t{ width: 250px; font-weight: 500; color: var(--ink); font-size: 13px; }
+table.ref td.n{ width: 46px; font-family: var(--ffm); color: var(--ink-4); font-size: 11px; }
+table.ref td.o{ width: 150px; font-size: 12px; color: var(--ink); font-weight: 400; }
+table.ref td b{ font-weight: 600; color: var(--ink); }
+
+/* ---------------- inert placeholder ---------------- */
+.nocontrols .controls{ display: none; }
+.hatch{ background-image: repeating-linear-gradient(135deg, var(--rule) 0 1px, transparent 1px 10px); }
+table.g.inertT td{ height: 32px; }
+
+.pagefoot{
+  margin-top: 96px; padding-top: 20px; border-top: 1px solid var(--rule-2);
+  display: flex; justify-content: space-between; gap: 18px; flex-wrap: wrap;
+  font-family: var(--ffm); font-size: 10px; color: var(--ink-4); letter-spacing: 0.04em;
+}
+
+/* ---------------- entry motion ---------------- */
+.sec{ opacity: 0; transform: translateY(12px); transition: opacity .6s var(--ease), transform .6s var(--ease); }
+.sec.in{ opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce){
+  *{ transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+  .sec{ opacity: 1; transform: none; }
+}
+/* nothing on this page may hide a figure. if scripting, the observer or printing
+   would leave a section unrevealed, it is shown regardless. */
+@media print{
+  .sec{ opacity: 1 !important; transform: none !important; }
+  .ambient, .mast{ display: none; }
+  .gridframe, table.ref, .tblock{ box-shadow: none; }
+}
+
+@media (max-width: 760px){
+  :root{ --pad: 18px; }
+  .mast-row{ min-height: 52px; gap: 14px; flex-wrap: nowrap; }
+  .mast .wm{ font-size: 15px; }
+  .strap{ font-size: 13.5px; padding-top: 36px; }
+  .sec{ padding-top: 60px; }
+  .sec-head h2{ font-size: 23px; }
+  .controls{ gap: 10px 14px; }
+  .ctrl{ flex-wrap: wrap; }
+  .ctrl > label{ flex-basis: 100%; }
+  .seg{ flex-wrap: wrap; }
+  table.g th.lbl, table.g td.lbl{ width: 208px; min-width: 208px; max-width: 208px; padding-left: 14px; }
+  tr.lv1 td.lbl{ padding-left: 28px; } tr.lv2 td.lbl{ padding-left: 44px; } tr.lv3 td.lbl{ padding-left: 60px; }
+  table.ref td.t{ width: 132px; }
+  table.ref td.o{ width: 74px; }
+  table.ref td.n{ width: 22px; }
+  table.ref td{ padding: 13px 10px; }
+  table.ref th{ padding: 11px 10px; }
+}
+
+/* ---------------- masthead identity ---------------- */
+/* the wordmark is the mark, so the old rotated square is retired */
+.mast .wm{ gap: 0; }
+.mast .wm::before{ content: none; }
+.wm-logo{
+  height: 21px; width: auto; display: block; flex: none;
+  /* the file is black on transparent, so dark mode simply flips it */
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]) .wm-logo{ filter: invert(1); } }
+:root[data-theme="dark"] .wm-logo{ filter: invert(1); }
+.wm-t{
+  font-family: var(--fs); font-size: 15px; font-weight: 400; letter-spacing: -0.015em;
+  color: var(--ink-2); margin-left: 14px; padding-left: 14px;
+  border-left: 1px solid var(--rule-2); white-space: nowrap;
+}
+
+/* ---------------- one period control for every table ---------------- */
+.mast-sub{
+  display: flex; flex-wrap: wrap; align-items: center; gap: 9px 24px;
+  max-width: 1680px; margin: 0 auto; padding: 10px 0 11px;
+  border-top: 1px solid var(--rule);
+}
+.mast-sub .scope{
+  font-family: var(--ffm); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-4); margin-left: auto; white-space: nowrap;
+}
+.mast-sub .ctrl > label{ color: var(--ink-3); }
+
+/* every grid keeps its own lens, share and cell-mode switches; a grid left with
+   none of those has no control bar at all rather than an empty tray */
+.controls:empty{ display: none; }
+
+@media (max-width: 900px){
+  .wm-t{ display: none; }
+  .mast-sub .scope{ display: none; }
+}
+
+/* the masthead now carries two rows, so everything that sticks or scrolls beneath it
+   measures from its real height rather than a number typed once and left behind */
+:root{ --mast-h: 106px; }
+.sec{ scroll-margin-top: calc(var(--mast-h) + 16px); }
+.tblock{ top: calc(var(--mast-h) + 16px); }
+
+/* on a phone the period bar is one scrolling row, not four stacked ones — a sticky
+   masthead that eats a third of the viewport is worse than no masthead */
+@media (max-width: 760px){
+  .mast-sub{ flex-wrap: nowrap; overflow-x: auto; gap: 0 16px; padding: 8px 0 9px; }
+  .mast-sub::-webkit-scrollbar{ height: 0; }
+  .mast-sub .ctrl{ flex: none; flex-wrap: nowrap; }
+  .mast-sub .ctrl > label{ flex-basis: auto; }
+  .mast-sub .seg{ flex-wrap: nowrap; }
+}
+
+/* ---------------- lifetime retention blocks ----------------
+   Retention stopped being a trend, so it stopped being a table. One standing block
+   per branch, read as at the end of the selected week. */
+.blocks{
+  display: grid; gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(268px, 1fr));
+}
+/* six blocks land 3 + 3 rather than 4 + 2, which reads as a grid instead of a leftover */
+@media (min-width: 1100px){ .blocks{ grid-template-columns: repeat(3, 1fr); } }
+.rblock{
+  border: 1px solid var(--rule); border-radius: var(--r-lg);
+  background: var(--card); box-shadow: var(--lift); overflow: hidden;
+  transition: box-shadow .2s var(--ease);
+}
+.rblock:hover{ box-shadow: var(--lift-2); }
+.rblock h3{
+  margin: 0; padding: 13px 18px; background: var(--head);
+  border-bottom: 1px solid var(--rule);
+  font-family: var(--ffm); font-size: 9.5px; font-weight: 500;
+  letter-spacing: 0.13em; text-transform: uppercase; color: var(--ink);
+  display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+}
+.rblock h3 .w{
+  font-size: 8.5px; letter-spacing: 0.04em; text-transform: none;
+  color: var(--ink-4); white-space: nowrap; font-weight: 400;
+}
+.rb-head{ padding: 15px 18px; background: var(--band); border-bottom: 1px solid var(--rule); }
+.rb-head .pl{ font-size: 12px; color: var(--ink-3); }
+.rb-head .pv{
+  font-family: var(--ffm); font-size: 26px; font-weight: 500;
+  letter-spacing: -0.03em; margin-top: 5px; color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.rblock .tb-grp:last-child{ border-bottom: 0; }
+.rb-row{ display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 4px 0; }
+.rb-row .k{ font-size: 12.5px; color: var(--ink-3); }
+.rb-row.lv1 .k{ padding-left: 13px; }
+.rb-row .n{
+  font-family: var(--ffm); font-size: 11.5px; color: var(--ink);
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.rb-row .s{ font-size: 9.5px; color: var(--ink-4); margin-left: 9px; }
+.rb-note{
+  padding: 13px 18px; border-top: 1px solid var(--rule);
+  font-size: 11.5px; line-height: 1.55; color: var(--ink-3); background: var(--card-2);
+}
+.sub-label{ max-width: 92ch; }
+
+/* ---------------- title ----------------
+   The wordmark is a heavy grotesque, uppercase and set tight. The title speaks the
+   same way: stacked, set solid, no italic and no flourish. Weight is the whole idea,
+   so the only other mark on it is one short heavy bar. */
+.hero{ padding: 84px 0 0; }
+.hero .eyebrow{
+  font-family: var(--ffm); font-size: 10px; font-weight: 500;
+  letter-spacing: 0.34em; text-transform: uppercase; color: var(--ink-4);
+}
+.hero .bar{
+  width: 44px; height: 3px; background: var(--ink);
+  margin: 18px 0 20px; border-radius: 1px;
+}
+.hero h1{
+  margin: 0; font-family: "Archivo", var(--ff);
+  font-weight: 800; font-size: clamp(44px, 8.2vw, 98px);
+  line-height: 0.845; letter-spacing: -0.035em;
+  text-transform: uppercase; color: var(--ink);
+}
+.hero h1 span{ display: block; }
+.hero .meta{
+  margin-top: 34px; padding-top: 15px; border-top: 1px solid var(--rule-2);
+  display: flex; flex-wrap: wrap; gap: 8px 30px;
+  font-family: var(--ffm); font-size: 10px; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--ink-4);
+}
+.hero .meta b{ color: var(--ink-2); font-weight: 500; }
+@media (max-width: 760px){
+  .hero{ padding-top: 44px; }
+  .hero h1{ font-size: clamp(34px, 12.4vw, 58px); }
+  .hero .bar{ margin: 14px 0 16px; }
+  .hero .meta{ margin-top: 24px; gap: 6px 18px; font-size: 9px; }
+}
+</style>
+
+<style>
+table.g thead th.sortable{ cursor:pointer; }
+table.g thead th.sortable:hover{ color: var(--ink); }
+table.g thead th.sorted{ color: var(--ink); font-weight:600; }
+table.g thead th.pre{ background: var(--card-2); }
+table.g td.pre{ background: var(--card-2); }
+table.g td.pre.lastpre, table.g th.pre.lastpre{ border-right:1px solid var(--rule-2); }
+.pill{ font-family: var(--ffm); font-size: 10px; padding: 2px 9px; border-radius: 9999px; white-space: nowrap; background: var(--pale-neutral); color: var(--ink-3); }
+.pill.red{ background: var(--pale-red); color: var(--ink-red); font-weight:500; }
+.pill.amber{ background: var(--pale-amber); color: var(--ink-amber); }
+.hstat{ display:flex; gap: 40px; flex-wrap: wrap; margin: 0 0 18px; }
+.hstat div{ display:flex; flex-direction:column; gap:4px; }
+.hstat .k{ font-family: var(--ffm); font-size: 9.5px; letter-spacing: .13em; text-transform: uppercase; color: var(--ink-4); }
+.hstat .v{ font-family: var(--ffm); font-size: 22px; font-weight: 500; letter-spacing: -0.03em; }
+.hstat .s{ font-size: 12px; color: var(--ink-3); }
+.sortnote{ font-family: var(--ffm); font-size: 9.5px; color: var(--ink-4); letter-spacing: .06em; margin-left:auto; }
+table.ref td.mono{ font-family: var(--ffm); font-size: 11.5px; color: var(--ink); }
+.gridwrap-ref{ overflow-x:auto; }
+</style>
+
+<div class="ambient" aria-hidden="true"></div>
+<header class="mast">
+  <div class="mast-row">
+    <span class="wm"><img class="wm-logo" src="data:image/png;base64,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" alt="Felipe and Sons Barberdashery"><span class="wm-t">Staff Metrics</span></span>
+    <nav id="nav">
+      <a href="#s-hiring">Hiring</a><a href="#s-total">Total Score</a><a href="#s-mastery">Mastery</a><a href="#s-consistency">Consistency</a><a href="#s-retention">Retention</a><a href="#s-foh">Front of House</a><a href="#s-gaps">Gaps</a>
+    </nav>
+  </div>
+</header>
+
+<div class="wrap">
+  <header class="hero">
+    <div class="eyebrow">Felipe and Sons Barberdashery</div>
+    <div class="bar" aria-hidden="true"></div>
+    <h1><span>Staff</span><span>Metrics</span></h1>
+    <div class="meta"><span>Data to <b>Sun 6 Sep 2026</b></span><span>Source <b>Supabase · F&amp;S Databases</b></span><span>Built <b>11 Sep 2026</b></span><span>Scoring <b>FS Barber Performance Score v1 · FS FOH Performance Score v1</b></span></div>
+  </header>
+
+  <section class="sec in" id="s-hiring">
+    <div class="sec-head"><h2><span class="n">01</span>Hiring</h2><span class="src">v_for_hire · days counted from today</span></div>
+    <div class="hstat" id="hire-stat"></div>
+    <div class="gridwrap-ref"><table class="ref" id="hire-tbl"></table></div>
+  </section>
+
+  <div class="unit-rule">Barbershop</div>
+
+  <section class="sec in" id="s-total">
+    <div class="sec-head"><h2><span class="n">02</span>Total Score</h2><span class="src">Mastery 35 · Consistency 35 · Retention 30 = 100</span></div>
+    <div id="g-total"></div>
+  </section>
+  <section class="sec in" id="s-mastery">
+    <div class="sec-head"><h2><span class="n">03</span>Mastery</h2><span class="src">BMA · 105 raw → 35 · A1 / A2 = old 15-category rubric</span></div>
+    <div id="g-mastery"></div>
+  </section>
+  <section class="sec in" id="s-consistency">
+    <div class="sec-head"><h2><span class="n">04</span>Consistency</h2><span class="src">70 raw ÷ 2 = 35 · weekly · Mon–Sun, labelled by week ending</span></div>
+    <div id="g-consistency"></div>
+  </section>
+  <section class="sec in" id="s-retention">
+    <div class="sec-head"><h2><span class="n">05</span>Retention</h2><span class="src">YBE kept bookings · phone-matched</span></div>
+    <div id="g-retention"></div>
+  </section>
+
+  <div class="unit-rule">Front of House</div>
+
+  <section class="sec in" id="s-foh">
+    <div class="sec-head"><h2><span class="n">06</span>Front of House</h2><span class="src">4 metrics × 25 · daily, credited to FOH on duty</span></div>
+    <div id="g-foh"></div>
+  </section>
+
+  <section class="sec in" id="s-gaps">
+    <div class="sec-head"><h2><span class="n">07</span>Gaps</h2><span class="src">every dash and why</span></div>
+    <div class="gridwrap-ref"><table class="ref" id="gaps-tbl"></table></div>
+  </section>
+
+  <footer class="pagefoot">
+    <span>Felipe and Sons Barberdashery · Staff Metrics · working file</span>
+    <span>Ipe for Jeff Tabangcora · 11 September 2026</span>
+  </footer>
+</div>
+
+<script>
+const DATA={"roster":[["BGC","Arturo Pinol","roving"],["BGC","Carlo Ybas","roving"],["BGC","Garnet Edge Bulahan",""],["BGC","Jayson Cortez",""],["BGC","Jerome Echipare",""],["BGC","Jovy Linogao",""],["BGC","Kevin Dare","head"],["BGC","Mel Gaco","head"],["BGC","Napoleon Jarra",""],["BGC","Noel Nagal",""],["BGC","Ramfel Llabore",""],["BGC","Rodolfo Marcial",""],["BGC","Ronaldo Elacion",""],["PPM","Aurelio Tagapia",""],["PPM","Benito \"Benny\" Luna","head"],["PPM","Jayjay Morong",""],["PPM","Noel Morit","head"],["PPM","Randy Divina",""],["PPM","Rico de Paz",""],["PPM","Ronald Navarro",""],["PPM","Runel Dayhop",""],["POD","Dave Taguinod",""],["POD","Harold Dare",""],["POD","Jason Torre",""],["POD","Mark Carlo Monton",""],["POD","Mhel John Trimor",""],["POD","Ryan Repollo",""],["LEV","Christopher Garin",""],["LEV","Eduardo Relacion",""],["LEV","Princeso R. Reambillo Jr.",""],["LEV","Reymart \"Rey\" Henson",""],["LEV","William Tagapia","head"],["EROD","Danric Matias",""],["EROD","Frederick dela Cruz",""],["EROD","Gabriel Golzaran",""],["EROD","Michael R. Ramos",""],["EROD","Reynato Basa",""]],"bma":{"Arturo Pinol":{"A1":{"total":48.7,"n":15,"raw":36.5,"tech":13.0,"t_sec":2.0,"t_sci":2.0,"t_clip":4.0,"t_fin":3.0,"t_sty":2.0,"c_hair":1.5,"s_greet":3.5,"s_hand":3.0,"s_final":3.0}},"Noel Nagal":{"A1":{"total":57.2,"n":15,"raw":42.9,"tech":11.5,"t_sec":2.5,"t_sci":2.0,"t_clip":3.0,"t_fin":2.0,"t_sty":2.0,"c_hair":3.0,"s_greet":4.0,"s_hand":3.0,"s_final":3.0},"A2":{"total":56.3,"n":15,"raw":42.2,"tech":13.2,"t_sec":2.0,"t_sci":2.2,"t_clip":3.5,"t_fin":3.5,"t_sty":2.0,"c_hair":2.5,"s_greet":3.5,"s_hand":4.0,"s_final":3.0}},"Mhel John Trimor":{"A1":{"total":42.7,"n":15,"raw":32.0,"tech":10.0,"t_sec":1.0,"t_sci":1.0,"t_clip":3.0,"t_fin":3.0,"t_sty":2.0,"c_hair":1.0,"s_greet":3.0,"s_hand":3.0,"s_final":3.0},"A2":{"total":53.3,"n":15,"raw":40.0,"tech":14.6,"t_sec":3.5,"t_sci":2.5,"t_clip":3.3,"t_fin":2.8,"t_sty":2.5,"c_hair":2.2,"s_greet":2.3,"s_hand":3.0,"s_final":2.8}},"Ronaldo Elacion":{"A1":{"total":48.7,"n":15,"raw":36.5,"tech":10.0,"t_sec":1.5,"t_sci":1.5,"t_clip":2.0,"t_fin":2.5,"t_sty":2.5,"c_hair":2.5,"s_greet":2.5,"s_hand":3.5,"s_final":3.0},"A2":{"total":40.4,"n":15,"raw":30.3,"tech":8.8,"t_sec":1.8,"t_sci":1.5,"t_clip":2.0,"t_fin":2.0,"t_sty":1.5,"c_hair":2.5,"s_greet":2.5,"s_hand":2.5,"s_final":2.5}},"Rico de Paz":{"A1":{"total":53.7,"n":15,"raw":40.3,"tech":13.0,"t_sec":2.0,"t_sci":2.0,"t_clip":3.5,"t_fin":3.0,"t_sty":2.5,"c_hair":2.5,"s_greet":3.0,"s_hand":3.5,"s_final":3.5},"A2":{"total":54.4,"n":15,"raw":40.8,"tech":13.5,"t_sec":2.0,"t_sci":2.5,"t_clip":3.5,"t_fin":3.0,"t_sty":2.5,"c_hair":2.5,"s_greet":3.0,"s_hand":3.5,"s_final":3.5}},"Jayjay Morong":{"A1":{"total":68.0,"n":15,"raw":51.0,"tech":18.0,"t_sec":4.0,"t_sci":3.0,"t_clip":4.0,"t_fin":4.0,"t_sty":3.0,"c_hair":3.0,"s_greet":3.0,"s_hand":4.0,"s_final":4.0},"A2":{"total":73.1,"n":15,"raw":54.8,"tech":18.0,"t_sec":3.8,"t_sci":3.5,"t_clip":4.2,"t_fin":3.5,"t_sty":3.0,"c_hair":3.4,"s_greet":4.4,"s_hand":3.0,"s_final":3.8}},"Mel Gaco":{"A1":{"total":60.0,"n":15,"raw":45.0,"tech":13.5,"t_sec":3.0,"t_sci":2.5,"t_clip":3.0,"t_fin":3.0,"t_sty":2.0,"c_hair":2.0,"s_greet":4.0,"s_hand":4.0,"s_final":3.5},"A2":{"total":64.2,"n":12,"raw":38.5,"tech":15.0,"t_sec":3.0,"t_sci":3.0,"t_clip":4.0,"t_fin":3.0,"t_sty":2.0,"c_hair":3.5,"s_greet":4.0,"s_hand":null,"s_final":3.5}},"Noel Morit":{"A1":{"total":54.5,"n":15,"raw":40.9,"tech":12.1,"t_sec":2.3,"t_sci":2.0,"t_clip":3.2,"t_fin":3.0,"t_sty":1.6,"c_hair":2.0,"s_greet":3.2,"s_hand":3.3,"s_final":3.0},"A2":{"total":53.5,"n":15,"raw":40.1,"tech":12.8,"t_sec":2.0,"t_sci":2.0,"t_clip":3.5,"t_fin":3.8,"t_sty":1.5,"c_hair":2.0,"s_greet":3.5,"s_hand":3.5,"s_final":3.0}},"Jovy Linogao":{"A1":{"total":54.0,"n":15,"raw":40.5,"tech":12.5,"t_sec":2.5,"t_sci":2.0,"t_clip":3.0,"t_fin":3.0,"t_sty":2.0,"c_hair":2.0,"s_greet":3.5,"s_hand":3.0,"s_final":3.5},"A2":{"total":57.1,"n":15,"raw":42.8,"tech":13.3,"t_sec":2.3,"t_sci":2.5,"t_clip":3.5,"t_fin":3.0,"t_sty":2.0,"c_hair":2.0,"s_greet":3.5,"s_hand":3.5,"s_final":4.0}},"Harold Dare":{"A1":{"total":61.3,"n":15,"raw":46.0,"tech":17.0,"t_sec":4.0,"t_sci":3.0,"t_clip":3.0,"t_fin":4.5,"t_sty":2.5,"c_hair":3.0,"s_greet":3.0,"s_hand":3.0,"s_final":4.0},"A2":{"total":67.3,"n":15,"raw":50.5,"tech":14.5,"t_sec":2.5,"t_sci":2.0,"t_clip":4.5,"t_fin":3.5,"t_sty":2.0,"c_hair":3.8,"s_greet":3.5,"s_hand":3.0,"s_final":3.5}},"Kevin Dare":{"A1":{"total":59.3,"n":15,"raw":44.5,"tech":14.0,"t_sec":2.5,"t_sci":3.0,"t_clip":3.0,"t_fin":3.5,"t_sty":2.0,"c_hair":2.0,"s_greet":4.0,"s_hand":4.0,"s_final":3.0},"A2":{"total":64.7,"n":15,"raw":48.5,"tech":15.0,"t_sec":3.0,"t_sci":2.5,"t_clip":3.5,"t_fin":3.5,"t_sty":2.5,"c_hair":2.5,"s_greet":4.0,"s_hand":4.0,"s_final":3.5}},"Runel Dayhop":{"A1":{"total":58.7,"n":15,"raw":44.0,"tech":15.0,"t_sec":2.5,"t_sci":2.5,"t_clip":4.0,"t_fin":3.5,"t_sty":2.5,"c_hair":2.5,"s_greet":2.0,"s_hand":3.0,"s_final":3.0},"A2":{"total":73.1,"n":15,"raw":54.8,"tech":17.1,"t_sec":2.8,"t_sci":3.5,"t_clip":4.0,"t_fin":3.8,"t_sty":3.0,"c_hair":4.0,"s_greet":3.5,"s_hand":4.0,"s_final":4.0}},"Ryan Repollo":{"A1":{"total":48.0,"n":15,"raw":36.0,"tech":12.0,"t_sec":3.0,"t_sci":2.0,"t_clip":2.0,"t_fin":3.0,"t_sty":2.0,"c_hair":2.5,"s_greet":3.0,"s_hand":3.5,"s_final":2.5},"A2":{"total":47.3,"n":15,"raw":35.5,"tech":13.0,"t_sec":3.0,"t_sci":1.5,"t_clip":3.5,"t_fin":3.0,"t_sty":2.0,"c_hair":2.0,"s_greet":3.0,"s_hand":1.5,"s_final":3.5}},"Jayson Cortez":{"A1":{"total":65.3,"n":15,"raw":49.0,"tech":18.0,"t_sec":4.0,"t_sci":3.0,"t_clip":4.0,"t_fin":4.0,"t_sty":3.0,"c_hair":4.0,"s_greet":3.0,"s_hand":3.0,"s_final":4.0},"A2":{"total":69.3,"n":15,"raw":52.0,"tech":18.0,"t_sec":3.5,"t_sci":3.5,"t_clip":4.5,"t_fin":3.5,"t_sty":3.0,"c_hair":4.0,"s_greet":3.5,"s_hand":3.5,"s_final":4.0}},"Napoleon Jarra":{"A1":{"total":49.3,"n":15,"raw":37.0,"tech":12.5,"t_sec":2.0,"t_sci":2.0,"t_clip":3.5,"t_fin":3.0,"t_sty":2.0,"c_hair":2.0,"s_greet":3.0,"s_hand":3.5,"s_final":3.0},"A2":{"total":55.7,"n":15,"raw":41.8,"tech":12.3,"t_sec":2.1,"t_sci":2.0,"t_clip":3.2,"t_fin":3.0,"t_sty":2.0,"c_hair":2.0,"s_greet":3.0,"s_hand":4.2,"s_final":3.5}},"Garnet Edge Bulahan":{"A1":{"total":48.0,"n":15,"raw":36.0,"tech":11.0,"t_sec":2.0,"t_sci":2.0,"t_clip":3.0,"t_fin":2.0,"t_sty":2.0,"c_hair":2.0,"s_greet":3.0,"s_hand":3.0,"s_final":3.0},"A2":{"total":55.3,"n":15,"raw":41.5,"tech":12.5,"t_sec":2.0,"t_sci":2.5,"t_clip":3.0,"t_fin":3.0,"t_sty":2.0,"c_hair":3.2,"s_greet":4.0,"s_hand":3.0,"s_final":3.0}},"Danric Matias":{"A1":{"total":57.3,"n":15,"raw":43.0,"tech":15.0,"t_sec":3.0,"t_sci":3.0,"t_clip":3.0,"t_fin":3.0,"t_sty":3.0,"c_hair":3.0,"s_greet":3.0,"s_hand":3.0,"s_final":3.0},"A2":{"total":62.3,"n":15,"raw":46.7,"tech":15.2,"t_sec":3.5,"t_sci":3.0,"t_clip":3.2,"t_fin":3.0,"t_sty":2.5,"c_hair":3.5,"s_greet":3.5,"s_hand":3.5,"s_final":3.0}},"Ramfel Llabore":{"A1":{"total":49.3,"n":15,"raw":37.0,"tech":11.5,"t_sec":2.5,"t_sci":1.5,"t_clip":3.0,"t_fin":3.0,"t_sty":1.5,"c_hair":1.5,"s_greet":3.0,"s_hand":3.0,"s_final":4.0},"A2":{"total":53.2,"n":15,"raw":39.9,"tech":14.2,"t_sec":2.8,"t_sci":2.5,"t_clip":3.2,"t_fin":3.2,"t_sty":2.5,"c_hair":2.3,"s_greet":2.5,"s_hand":2.8,"s_final":3.5}},"Mark Carlo Monton":{"A1":{"total":63.3,"n":15,"raw":47.5,"tech":18.0,"t_sec":3.0,"t_sci":3.5,"t_clip":3.5,"t_fin":4.0,"t_sty":4.0,"c_hair":3.5,"s_greet":2.5,"s_hand":3.0,"s_final":4.5},"A2":{"total":71.7,"n":15,"raw":53.8,"tech":18.5,"t_sec":3.5,"t_sci":3.5,"t_clip":3.5,"t_fin":4.0,"t_sty":4.0,"c_hair":4.0,"s_greet":3.4,"s_hand":3.1,"s_final":4.5}},"Michael R. Ramos":{"A1":{"total":52.0,"n":15,"raw":39.0,"tech":14.0,"t_sec":3.0,"t_sci":3.0,"t_clip":3.0,"t_fin":3.0,"t_sty":2.0,"c_hair":2.0,"s_greet":3.0,"s_hand":3.0,"s_final":2.0},"A2":{"total":62.7,"n":15,"raw":47.0,"tech":14.5,"t_sec":2.8,"t_sci":2.5,"t_clip":3.2,"t_fin":3.5,"t_sty":2.5,"c_hair":2.5,"s_greet":3.0,"s_hand":3.5,"s_final":3.5}},"Frederick dela Cruz":{"A1":{"total":61.4,"n":14,"raw":43.0,"tech":16.0,"t_sec":3.0,"t_sci":3.0,"t_clip":4.0,"t_fin":3.0,"t_sty":3.0,"c_hair":3.0,"s_greet":3.0,"s_hand":3.0,"s_final":3.0},"A2":{"total":71.9,"n":15,"raw":53.9,"tech":18.3,"t_sec":4.0,"t_sci":3.7,"t_clip":3.8,"t_fin":3.8,"t_sty":3.0,"c_hair":4.0,"s_greet":3.0,"s_hand":3.8,"s_final":3.5}},"Gabriel Golzaran":{"A1":{"total":60.0,"n":15,"raw":45.0,"tech":16.0,"t_sec":3.0,"t_sci":3.0,"t_clip":3.0,"t_fin":3.0,"t_sty":4.0,"c_hair":2.0,"s_greet":3.0,"s_hand":3.0,"s_final":4.0},"A2":{"total":63.1,"n":15,"raw":47.3,"tech":16.7,"t_sec":3.2,"t_sci":3.0,"t_clip":3.5,"t_fin":3.0,"t_sty":4.0,"c_hair":3.5,"s_greet":3.5,"s_hand":3.5,"s_final":4.0}},"Reynato Basa":{"A1":{"total":58.7,"n":15,"raw":44.0,"tech":14.0,"t_sec":3.0,"t_sci":3.0,"t_clip":3.0,"t_fin":3.0,"t_sty":2.0,"c_hair":3.0,"s_greet":3.0,"s_hand":3.0,"s_final":4.0},"A2":{"total":65.6,"n":15,"raw":49.2,"tech":15.8,"t_sec":3.5,"t_sci":3.0,"t_clip":3.8,"t_fin":3.0,"t_sty":2.5,"c_hair":2.9,"s_greet":3.5,"s_hand":3.5,"s_final":4.0}},"Reymart \"Rey\" Henson":{"A1":{"total":64.0,"n":15,"raw":48.0,"tech":17.0,"t_sec":4.0,"t_sci":3.0,"t_clip":4.0,"t_fin":4.0,"t_sty":2.0,"c_hair":3.0,"s_greet":3.0,"s_hand":3.0,"s_final":3.0},"A2":{"total":69.9,"n":15,"raw":52.4,"tech":16.2,"t_sec":3.0,"t_sci":3.2,"t_clip":3.5,"t_fin":3.5,"t_sty":3.0,"c_hair":3.0,"s_greet":4.0,"s_hand":4.0,"s_final":3.4}},"Ronald Navarro":{"A1":{"total":53.5,"n":15,"raw":40.1,"tech":12.4,"t_sec":2.0,"t_sci":1.9,"t_clip":3.2,"t_fin":3.0,"t_sty":2.3,"c_hair":2.0,"s_greet":3.4,"s_hand":3.0,"s_final":3.3},"A2":{"total":56.0,"n":15,"raw":42.0,"tech":12.4,"t_sec":1.4,"t_sci":2.8,"t_clip":3.2,"t_fin":3.0,"t_sty":2.0,"c_hair":2.8,"s_greet":3.4,"s_hand":3.5,"s_final":3.0}},"Eduardo Relacion":{"A1":{"total":46.7,"n":15,"raw":35.0,"tech":12.0,"t_sec":3.0,"t_sci":2.0,"t_clip":2.0,"t_fin":3.0,"t_sty":2.0,"c_hair":1.0,"s_greet":4.0,"s_hand":3.0,"s_final":2.0},"A2":{"total":52.7,"n":15,"raw":39.5,"tech":13.5,"t_sec":3.0,"t_sci":2.0,"t_clip":3.5,"t_fin":3.0,"t_sty":2.0,"c_hair":3.0,"s_greet":4.0,"s_hand":3.0,"s_final":1.0}},"Christopher Garin":{"A1":{"total":47.3,"n":15,"raw":35.5,"tech":13.0,"t_sec":3.0,"t_sci":3.0,"t_clip":3.0,"t_fin":2.0,"t_sty":2.0,"c_hair":2.0,"s_greet":2.0,"s_hand":3.0,"s_final":2.0},"A2":{"total":60.0,"n":15,"raw":45.0,"tech":13.0,"t_sec":2.5,"t_sci":2.5,"t_clip":3.0,"t_fin":3.0,"t_sty":2.0,"c_hair":2.0,"s_greet":4.0,"s_hand":3.0,"s_final":3.0}},"William Tagapia":{"A1":{"total":54.7,"n":15,"raw":41.0,"tech":14.0,"t_sec":3.0,"t_sci":3.0,"t_clip":3.0,"t_fin":3.0,"t_sty":2.0,"c_hair":2.0,"s_greet":3.0,"s_hand":3.0,"s_final":3.0},"A2":{"total":53.3,"n":15,"raw":40.0,"tech":13.5,"t_sec":3.0,"t_sci":2.5,"t_clip":3.0,"t_fin":3.0,"t_sty":2.0,"c_hair":1.5,"s_greet":3.5,"s_hand":3.0,"s_final":3.0}},"Randy Divina":{"A1":{"total":50.4,"n":15,"raw":37.8,"tech":11.5,"t_sec":1.0,"t_sci":2.0,"t_clip":3.2,"t_fin":3.0,"t_sty":2.3,"c_hair":2.0,"s_greet":3.0,"s_hand":4.0,"s_final":3.3},"A2":{"total":58.3,"n":15,"raw":43.7,"tech":12.6,"t_sec":1.4,"t_sci":2.0,"t_clip":3.4,"t_fin":3.0,"t_sty":2.8,"c_hair":2.0,"s_greet":4.0,"s_hand":4.0,"s_final":3.5}},"Benito \"Benny\" Luna":{"A1":{"total":50.7,"n":15,"raw":38.0,"tech":13.0,"t_sec":2.0,"t_sci":2.0,"t_clip":4.0,"t_fin":3.0,"t_sty":2.0,"c_hair":2.0,"s_greet":2.0,"s_hand":3.0,"s_final":3.0},"A2":{"total":59.3,"n":15,"raw":44.5,"tech":12.6,"t_sec":1.8,"t_sci":2.2,"t_clip":3.2,"t_fin":3.0,"t_sty":2.4,"c_hair":2.4,"s_greet":4.0,"s_hand":3.2,"s_final":3.0}},"Aurelio Tagapia":{"A1":{"total":54.7,"n":15,"raw":41.0,"tech":15.0,"t_sec":3.0,"t_sci":3.0,"t_clip":3.0,"t_fin":3.0,"t_sty":3.0,"c_hair":2.0,"s_greet":3.0,"s_hand":2.0,"s_final":3.0},"A2":{"total":60.3,"n":15,"raw":45.2,"tech":12.9,"t_sec":2.4,"t_sci":2.5,"t_clip":3.0,"t_fin":3.0,"t_sty":2.0,"c_hair":3.2,"s_greet":4.0,"s_hand":3.5,"s_final":3.0}}},"ret":{"Arturo Pinol":{"l":[null,null,null,null,0,0,2,3.1,3.6],"lc":[0,0,0,0,43,118,202,293,308],"c":{"05":[43,0,0],"06":[75,3,4]}},"Aurelio Tagapia":{"l":[18.2,18.8,19.4,19.5,19.8,20.1,20.4,21,21],"lc":[1489,1556,1622,1679,1775,1849,1918,2015,2034],"c":{"01":[76,5,6.6],"02":[67,6,9],"03":[66,3,4.5],"04":[57,3,5.3],"05":[96,5,5.2],"06":[74,11,14.9]}},"Benito \"Benny\" Luna":{"l":[27,26.9,27.2,27.6,27.5,27.9,27.7,27.8,27.6],"lc":[1157,1210,1270,1298,1373,1417,1471,1518,1530],"c":{"01":[35,4,11.4],"02":[53,7,13.2],"03":[60,9,15],"04":[28,2,7.1],"05":[75,11,14.7],"06":[44,4,9.1]}},"Carlo Ybas":{"l":[null,null,null,null,0,1.8,5,4.6,5.4],"lc":[0,0,0,0,44,110,161,240,258],"c":{"05":[44,4,9.1],"06":[66,5,7.6]}},"Christopher Garin":{"l":[17,18.3,19.3,20.4,21.6,22.8,23.4,23.5,23.4],"lc":[454,491,535,568,593,613,636,665,675],"c":{"01":[48,4,8.3],"02":[37,3,8.1],"03":[44,7,15.9],"04":[33,2,6.1],"05":[25,6,24],"06":[20,4,20]}},"Danric Matias":{"l":[38.2,38,38.2,38.2,38.6,38.2,38.1,38,37.9],"lc":[1002,1021,1033,1050,1069,1092,1108,1118,1126],"c":{"01":[26,4,15.4],"02":[19,3,15.8],"03":[12,0,0],"04":[17,2,11.8],"05":[19,3,15.8],"06":[23,1,4.3]}},"Dave Taguinod":{"l":[null,null,null,null,null,null,null,2.8,2.1],"lc":[0,0,0,0,0,0,0,36,48],"c":null},"Eduardo Relacion":{"l":[34.3,34.2,34,34.3,34.1,34.2,34.5,34.4,34.4],"lc":[1520,1540,1563,1576,1598,1606,1616,1627,1631],"c":{"01":[22,2,9.1],"02":[20,2,10],"03":[23,1,4.3],"04":[13,1,7.7],"05":[22,1,4.5],"06":[8,2,25]}},"Frederick dela Cruz":{"l":[39,39.1,39.8,40,39.8,39.7,40.5,40.2,40.2],"lc":[817,831,846,861,885,902,921,941,945],"c":{"01":[11,2,18.2],"02":[14,3,21.4],"03":[15,3,20],"04":[15,2,13.3],"05":[24,6,25],"06":[17,6,35.3]}},"Gabriel Golzaran":{"l":[9.5,10.9,15.7,17.8,22.5,22.6,24.1,26.4,27.5],"lc":[105,138,178,214,240,274,307,330,331],"c":{"01":[27,4,14.8],"02":[33,2,6.1],"03":[40,9,22.5],"04":[36,6,16.7],"05":[26,5,19.2],"06":[34,5,14.7]}},"Garnet Edge Bulahan":{"l":[17.3,17.4,16.5,16.1,15.9,16.3,17,17.7,18],"lc":[284,311,339,380,428,467,495,542,550],"c":{"01":[34,2,5.9],"02":[27,0,0],"03":[28,4,14.3],"04":[41,5,12.2],"05":[48,5,10.4],"06":[39,5,12.8]}},"Harold Dare":{"l":[23.5,23.6,23.4,24.9,24.9,26,27.3,28.1,28.1],"lc":[281,326,380,413,453,496,538,583,594],"c":{"01":[32,4,12.5],"02":[45,6,13.3],"03":[54,9,16.7],"04":[33,4,12.1],"05":[40,11,27.5],"06":[43,7,16.3]}},"Jayjay Morong":{"l":[16.5,16.9,17.6,17.5,19.3,16.7,15.9,16.3,16.2],"lc":[369,403,443,481,517,634,742,854,874],"c":{"01":[43,5,11.6],"02":[34,1,2.9],"03":[40,5,12.5],"04":[38,5,13.2],"05":[36,2,5.6],"06":[117,11,9.4]}},"Jayson Cortez":{"l":[36.8,36.7,36.4,36.3,35.7,35.3,35.3,35.4,35.4],"lc":[940,962,980,1003,1037,1075,1102,1130,1133],"c":{"01":[22,1,4.5],"02":[22,0,0],"03":[18,3,16.7],"04":[23,3,13],"05":[34,4,11.8],"06":[38,5,13.2]}},"Jerome Echipare":{"l":[null,null,null,null,null,0,7.1,9,8.9],"lc":[0,0,0,0,0,36,99,156,168],"c":{"06":[36,6,16.7]}},"Jovy Linogao":{"l":[29.9,29.8,29.7,29.9,29.7,29.8,29.8,29.9,29.9],"lc":[1264,1284,1308,1327,1362,1401,1438,1472,1482],"c":{"01":[24,2,8.3],"02":[20,5,25],"03":[24,3,12.5],"04":[19,3,15.8],"05":[35,5,14.3],"06":[39,4,10.3]}},"Kevin Dare":{"l":[43.1,42.9,43,43.1,42.8,42.8,43,42.8,42.8],"lc":[1177,1197,1208,1213,1228,1238,1246,1270,1272],"c":{"01":[13,1,7.7],"02":[20,3,15],"03":[11,0,0],"04":[5,0,0],"05":[15,3,20],"06":[10,2,20]}},"Mark Carlo Monton":{"l":[28.5,28.2,27.7,28.4,28.8,28.8,29,30,30.1],"lc":[407,443,483,518,552,593,628,673,680],"c":{"01":[25,3,12],"02":[36,5,13.9],"03":[40,10,25],"04":[35,6,17.1],"05":[34,3,8.8],"06":[41,5,12.2]}},"Mel Gaco":{"l":[35.3,34.9,34.6,34.6,34.5,33.6,33.5,33.7,33.6],"lc":[1613,1638,1662,1681,1708,1761,1805,1842,1853],"c":{"01":[18,0,0],"02":[25,2,8],"03":[24,4,16.7],"04":[19,3,15.8],"05":[27,1,3.7],"06":[53,7,13.2]}},"Mhel John Trimor":{"l":[4.9,8.6,9.3,12.4,13.7,16.1,17.2,17.5,17.5],"lc":[102,151,205,250,314,360,402,405,405],"c":{"01":[41,5,12.2],"02":[49,10,20.4],"03":[54,4,7.4],"04":[45,4,8.9],"05":[64,12,18.8],"06":[46,2,4.3]}},"Michael R. Ramos":{"l":[39.9,39.8,39.9,39.8,39.8,39.6,39.6,39.5,39.4],"lc":[2505,2524,2539,2550,2566,2586,2599,2617,2624],"c":{"01":[14,0,0],"02":[19,4,21.1],"03":[15,0,0],"04":[11,2,18.2],"05":[16,1,6.3],"06":[20,3,15]}},"Napoleon Jarra":{"l":[19.3,19.8,19.9,19.5,19.4,19.4,18.9,18.9,18.8],"lc":[633,665,700,732,785,826,876,931,939],"c":{"01":[34,1,2.9],"02":[32,2,6.3],"03":[35,3,8.6],"04":[32,1,3.1],"05":[53,2,3.8],"06":[41,3,7.3]}},"Noel Morit":{"l":[32,32.1,31.8,31.9,31.7,31.7,31.5,31.1,31.1],"lc":[2072,2112,2158,2197,2260,2312,2389,2470,2485],"c":{"01":[50,6,12],"02":[40,2,5],"03":[46,3,6.5],"04":[39,4,10.3],"05":[63,9,14.3],"06":[52,5,9.6]}},"Noel Nagal":{"l":[28.8,28.8,28.7,28.3,28.2,28.4,28.7,28.4,28.5],"lc":[1099,1116,1131,1161,1199,1235,1260,1301,1314],"c":{"01":[22,1,4.5],"02":[17,0,0],"03":[15,3,20],"04":[30,2,6.7],"05":[38,5,13.2],"06":[36,3,8.3]}},"Princeso R. Reambillo Jr.":{"l":[null,null,0,2.9,10.5,13.5,19.2,20.9,19.6],"lc":[0,0,18,68,114,148,177,211,224],"c":{"03":[18,2,11.1],"04":[50,9,18],"05":[46,6,13],"06":[34,7,20.6]}},"Ramfel Llabore":{"l":[10.2,10.7,11.9,11.4,11.9,12,13.1,13.6,13.4],"lc":[352,391,421,463,530,581,626,676,692],"c":{"01":[42,2,4.8],"02":[39,5,12.8],"03":[30,3,10],"04":[42,0,0],"05":[67,5,7.5],"06":[51,9,17.6]}},"Randy Divina":{"l":[26.3,26.7,26.5,26.8,26.9,26.8,26.9,27.2,27.2],"lc":[2260,2300,2354,2408,2479,2522,2577,2625,2630],"c":{"01":[58,7,12.1],"02":[40,3,7.5],"03":[54,4,7.4],"04":[54,6,11.1],"05":[71,6,8.5],"06":[43,8,18.6]}},"Reymart \"Rey\" Henson":{"l":[32.9,33.2,33.1,33.4,34.4,34.4,34.5,34.8,34.7],"lc":[577,617,662,691,710,742,768,791,799],"c":{"01":[38,3,7.9],"02":[40,7,17.5],"03":[45,8,17.8],"04":[29,7,24.1],"05":[19,3,15.8],"06":[32,4,12.5]}},"Reynato Basa":{"l":[45.3,45,44.8,44.9,45,44.9,45.3,45.4,45.3],"lc":[1097,1115,1126,1146,1157,1173,1183,1201,1203],"c":{"01":[14,1,7.1],"02":[18,0,0],"03":[11,4,36.4],"04":[20,5,25],"05":[11,2,18.2],"06":[16,1,6.3]}},"Rico de Paz":{"l":[12.2,11.6,11.9,12,12.8,13.3,14.5,15.9,16],"lc":[449,500,561,619,688,761,850,949,968],"c":{"01":[57,3,5.3],"02":[51,1,2],"03":[61,4,6.6],"04":[58,3,5.2],"05":[69,5,7.2],"06":[73,13,17.8]}},"Rodolfo Marcial":{"l":[null,null,null,null,null,0,1,4.8,6.7],"lc":[0,0,0,0,0,32,101,165,178],"c":{"06":[32,2,6.3]}},"Ronald Navarro":{"l":[23.3,23.1,23.4,23.8,23.7,24,24.2,24.8,24.6],"lc":[1624,1691,1736,1780,1868,1935,2018,2092,2112],"c":{"01":[54,2,3.7],"02":[67,7,10.4],"03":[45,3,6.7],"04":[44,5,11.4],"05":[88,15,17],"06":[67,12,17.9]}},"Ronaldo Elacion":{"l":[9.3,9.2,10.7,10,10.5,11.7,12,12.4,12.4],"lc":[290,336,373,420,478,523,577,630,635],"c":{"01":[43,1,2.3],"02":[46,1,2.2],"03":[37,2,5.4],"04":[47,1,2.1],"05":[58,2,3.4],"06":[45,6,13.3]}},"Runel Dayhop":{"l":[7.3,8,9.9,9.5,11.3,10.4,9.5,9.8,9.8],"lc":[289,338,365,412,470,550,642,736,765],"c":{"01":[39,1,2.6],"02":[49,3,6.1],"03":[27,2,7.4],"04":[47,5,10.6],"05":[58,2,3.4],"06":[80,8,10]}},"Ryan Repollo":{"l":[17.6,17.8,19.4,20,20.8,21.2,21.5,21.5,21.4],"lc":[437,482,527,564,605,638,674,722,737],"c":{"01":[36,8,22.2],"02":[45,6,13.3],"03":[45,4,8.9],"04":[37,2,5.4],"05":[41,2,4.9],"06":[33,3,9.1]}},"William Tagapia":{"l":[33.6,33.8,33.8,33.6,33.7,33.8,33.9,34,34],"lc":[2539,2554,2578,2600,2621,2638,2651,2662,2668],"c":{"01":[24,4,16.7],"02":[15,0,0],"03":[24,2,8.3],"04":[22,4,18.2],"05":[21,6,28.6],"06":[17,3,17.6]}}},"consw":{"Arturo Pinol":{"g":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[8.88,850,null,null],[7.77,725,null,null],[9.35,893,null,null],[7.67,731,null,null],[10,1007,null,null]]},"Aurelio Tagapia":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[8.07,767,0,0],[9.31,885,1.54,1.9],[8.83,839,1.89,2.3],[9.24,878,3.55,4.3],[10,971,3.33,4]]},"Benito \"Benny\" Luna":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[9.64,916,0,0],[8.27,785,3.09,3.7],[8.21,780,1.98,2.4],[7.27,691,2.08,2.5],[8.31,790,0,0]]},"Carlo Ybas":{"g":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[9.27,896,null,null],[9.26,868,null,null],[10,983,null,null],[10,1229,null,null],[10,1061,null,null]]},"Christopher Garin":{"g":[0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[8.89,854,0,0],[8.56,822,0,0],[10,986,0,0],[9.26,889,0,0],[8.59,825,0,0]]},"Danric Matias":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[8.18,737,0,0],[8.04,724,0,0],[7.39,665,0,0],[8.57,771,0,0],[8.16,734,0,0]]},"Dave Taguinod":{"g":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,1,0,0,0],"c":[[null,null,null,null],[7.3,672,null,null],[8.31,764,null,null],[8.04,739,null,null],[7.99,735,null,null]]},"Eduardo Relacion":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[10,973,0,0],[8.07,775,0,0],[8.81,845,0,0],[10,988,0,0],[9.39,902,2.53,3]]},"Frederick dela Cruz":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,1,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0],"c":[[8.62,776,0,0],[7.15,643,0,0],[7.5,675,0,0],[8.17,735,0,0],[9.18,827,0,0]]},"Gabriel Golzaran":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[8.05,725,0,0],[8.13,732,0,0],[8.53,768,4.17,5],[8.43,759,0,0],[7.56,680,10,13.3]]},"Garnet Edge Bulahan":{"g":[0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[8.06,806,0,0],[8.16,816,0,0],[8.85,885,0,0],[7.48,748,8.33,10],[7.85,785,0,0]]},"Harold Dare":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,8,3,0],"c":[[7.67,706,null,null],[8.01,737,null,null],[9.05,833,null,null],[10,966,null,null],[8.37,770,null,null]]},"Jason Torre":{"g":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null],"c":[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null]]},"Jayjay Morong":{"g":[0,1,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0],"c":[[10,1028,1.98,2.4],[9.75,926,1.85,2.2],[9.27,881,1.89,2.3],[9.85,936,0,0],[8.98,853,4.9,5.9]]},"Jayson Cortez":{"g":[0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0],"c":[[8.42,842,0,0],[10,1028,0,0],[8.78,878,1.89,2.3],[9.76,976,4.9,5.9],[8.3,830,3.09,3.7]]},"Jerome Echipare":{"g":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[8.4,840,0,0],[9.08,908,0,0],[7.81,781,3.47,4.2],[8.74,874,10,21.1],[10,1022,10,15]]},"Jovy Linogao":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[9.65,965,0,0],[9.25,925,0,0],[10,1161,1.77,2.1],[10,1020,0,0],[10,1067,4.63,5.6]]},"Kevin Dare":{"g":[0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0],"c":[[8.97,897,0,0],[10,1027,1.98,2.4],[10,1078,7.75,9.3],[10,1026,0,0],[7.81,781,3.88,4.7]]},"Mark Carlo Monton":{"g":[0,null,0,0,0,0,0,1,0,0,0,0,0,0,1,1,1,1,0,0,0,1,2,0,1,1,0,0,0,0,0,0,0,0,0,0],"c":[[10,1108,null,null],[10,1033,null,null],[10,1245,null,null],[10,979,null,null],[10,1068,null,null]]},"Mel Gaco":{"g":[0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0],"c":[[10,1099,0,0],[9.29,929,2.53,3],[8.5,850,2.25,2.7],[9.43,943,3.09,3.7],[9.46,946,2.14,2.6]]},"Mhel John Trimor":{"g":[0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,null,null,null,null,null],"c":[[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null],[null,null,null,null]]},"Michael R. Ramos":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[10,1035,0,0],[8.88,799,0,0],[6.88,619,0,0],[8.05,725,0,0],[9.59,863,0,0]]},"Napoleon Jarra":{"g":[0,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[8.02,802,0,0],[7.51,751,0,0],[8.33,833,0,0],[8.99,899,0,0],[7.05,705,0,0]]},"Noel Morit":{"g":[0,0,0,0,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[9.7,921,1.57,1.9],[9.39,892,0,0],[10,980,0,0],[9.34,887,3.21,3.8],[9.5,903,1.57,1.9]]},"Noel Nagal":{"g":[0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[10,1235,0,0],[8.83,883,0,0],[10,1217,0,0],[10,1047,0,0],[10,1081,6.58,7.9]]},"Princeso R. Reambillo Jr.":{"g":[null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[10,1020,0,0],[10,972,0,0],[10,1072,2.78,3.3],[10,996,0,0],[9.98,958,0,0]]},"Ramfel Llabore":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[10,1442,0,0],[10,1004,0,0],[10,1234,2.45,2.9],[10,1500,4.39,5.3],[9.79,979,0,0]]},"Randy Divina":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[9.3,884,0,0],[10,974,0,0],[9.9,941,0,0],[8.05,765,0,0],[7.85,746,0,0]]},"Reymart \"Rey\" Henson":{"g":[0,2,0,0,1,0,0,0,0,1,0,3,1,1,2,0,0,0,0,1,0,2,0,2,0,2,0,2,1,3,1,0,0,0,1,1],"c":[[8.21,788,0,0],[10,1167,0,0],[9.1,873,0,0],[10,1004,0,0],[9.04,868,0,0]]},"Reynato Basa":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0],"c":[[7.26,653,0,0],[7.55,679,3.47,4.2],[7.55,680,3.21,3.8],[7.56,680,0,0],[8.09,728,0,0]]},"Rico de Paz":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[8.37,795,0,0],[8.14,773,1.85,2.2],[8.73,829,1.94,2.3],[9.88,939,0,0],[9.69,920,1.81,2.2]]},"Rodolfo Marcial":{"g":[null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,null,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[10,1069,0,0],[7.53,753,3.33,4],[8.47,847,0,0],[8.63,863,10,17.6],[8.07,807,3.09,3.7]]},"Ronald Navarro":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[8.4,798,0,0],[9.27,881,0,0],[9.19,873,3.14,3.8],[9.7,922,0,0],[10,1080,1.57,1.9]]},"Ronaldo Elacion":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[9.91,991,0,0],[8.84,884,0,0],[10,1182,0,0],[10,1177,0,0],[8.68,868,0,0]]},"Runel Dayhop":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[9.09,863,0,0],[9.22,876,0,0],[9.15,869,5.56,6.7],[9.29,883,0,0],[8.7,827,0,0]]},"Ryan Repollo":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[10,981,null,null],[8.03,739,null,null],[7.26,668,null,null],[10,957,null,null],[8.45,778,null,null]]},"William Tagapia":{"g":[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],"c":[[8.21,789,0,0],[7.58,728,2.38,2.9],[9.77,937,2.08,2.5],[8.34,801,0,0],[9.22,885,0,0]]}},"hire":[["HO-AS","Area Supervisor","HO","2026-09-26"],["TRN-BAR01","Barber 1","TRN","2026-10-20"],["TRN-BAR02","Barber 2","TRN","2026-10-20"],["TRN-BAR03","Barber 3","TRN","2026-10-20"],["TRN-BAR04","Barber 4","TRN","2026-10-20"],["TRN-BAR05","Barber 5","TRN","2026-10-20"],["TRN-BAR06","Barber 6","TRN","2026-10-20"],["TRN-BAR07","Barber 7","TRN","2026-10-20"],["TRN-FOH1","FOH 1","TRN","2026-10-20"],["TRN-FOH2","FOH 2","TRN","2026-10-20"],["TRN-UTL1","Utility 1","TRN","2026-10-20"],["TRN-UTL2","Utility 2","TRN","2026-10-20"],["HO-MKT","Marketing Lead","HO",null]],"foh":[["Justin Bernal","BGC","FOH"],["Ianne Idor","BGC","FOH"],["Ann Jeah Landroma","PPM","FOH"],["Joy Lomugdang","PPM","FOH"],["RoseMarie Abenoja","POD","FOH"],["Monica Ursua","LEV","FOH"],["Jhasmine Kaye Lim","EROD","Manager"],["Kristine Joy Villegas","EROD","Manager"],["Louella Marie Huang","EROD","Manager"]]};
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep'].map((l,i)=>({k:String(i+1).padStart(2,'0'), l, i}));
+const BRANCHES = [['BGC','BGC'],['PPM','Power Plant'],['POD','Podium'],['LEV','Leviste'],['EROD','E. Rodriguez']];
+const f1 = x => (Math.round(x*10)/10).toFixed(1);
+const peso = x => '₱'+Math.round(x).toLocaleString('en-PH');
+
+/* ---------- views ---------- */
+const PILLARS = [
+  ['Technical','tech',25,[['t_sec','Sectioning'],['t_sci','Scissor Control & Body Mechanics'],['t_clip','Clipper Work'],['t_fin','Finishing'],['t_sty','Styling']]],
+  ['Consultation','cons',25,[['c_cape','Cape Before Consultation (binary)'],['c_hair','Hair Analysis'],['c_img','Image Diagnosis + Service Recommendation'],['c_plan','Haircut Planning & Client Alignment'],['c_after','Aftercare Advice + Product Recommendation']]],
+  ['Client Satisfaction','csat',25,[['s_greet','Greeting & Client Comfort'],['s_hand','Handling'],['s_final','Final Result'],['s_check','Checkout & Feedback'],['s_rebook','Rebooking (binary)']]],
+  ['Knowledge','know',5,[['k_quiz','Knowledge quiz']]],
+  ['Service Ritual','rit',25,[['r_drink','Offering a Drink (binary)'],['r_towel','Hot Towel Application'],['r_mass','Massage Technique'],['r_seq','Ritual Sequence'],['r_time','Timing (45-min)']]]
+];
+const OLD_ITEMS = new Set(['t_sec','t_sci','t_clip','t_fin','t_sty','c_hair','s_greet','s_hand','s_final']);
+const WEEKS = Array.from({length:36},(_,i)=>{ const e=new Date(Date.UTC(2026,0,4+7*i)); return {i, l: e.getUTCDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][e.getUTCMonth()]}; });
+const ATTR_FROM = 31; /* week index of 3–9 Aug */
+const monthCols = sub => MONTHS.map(m=>({k:m.k, l:m.l, sub: m.k==='09' ? 'MTD · to 6 Sep' : sub, now: m.k==='09'}));
+
+const CFG = {
+ total: { host:'g-total', rows:'barbers', views:[{id:'total',label:'Total'}],
+   cols: ()=>monthCols('/100'), val: ()=>null, why: ()=>'Mastery and Consistency are incomplete, so the total is not shown' },
+
+ mastery: { host:'g-mastery', rows:'barbers',
+   views: [{id:'total',label:'Total'}].concat(PILLARS.map(p=>({id:p[1],label:p[0]}))),
+   items: PILLARS.map(p=>({group:p[0], items:p[3]})),
+   cols: v => {
+     const unit = v==='total' ? '/35' : v==='know' ? '/5' : PILLARS.some(p=>p[1]===v) ? '/'+PILLARS.find(p=>p[1]===v)[2] : '/5';
+     const preSub = v==='total' ? '/100 · old rubric' : v==='tech' ? '/25 · old rubric' : '/5 · old rubric';
+     return [{k:'A1',l:'A1',sub:preSub,pre:true},{k:'A2',l:'A2',sub:preSub,pre:true,lastpre:true}].concat(monthCols(unit));
+   },
+   val: (n,v,k) => {
+     if(k!=='A1' && k!=='A2') return null;
+     const a = DATA.bma[n] && DATA.bma[n][k]; if(!a) return null;
+     if(v==='total') return {v:a.total, txt:f1(a.total), sub: a.raw+' of '+(a.n*5)+(a.n<15?' · '+a.n+'/15 scored':'')};
+     if(v==='tech') return a.tech==null?null:{v:a.tech, txt:f1(a.tech)};
+     if(OLD_ITEMS.has(v) && a[v]!=null) return {v:a[v], txt:f1(a[v])};
+     return null;
+   },
+   why: (v,k) => (k==='A1'||k==='A2') ? 'No old-rubric score, or no exact match to this BMA item' : 'BMA not yet run for this month' },
+
+ consistency: { host:'g-consistency', rows:'barbers', scrollEnd:true,
+   views:[{id:'total',label:'Total'},{id:'arpu',label:'ARPU'},{id:'retail',label:'Retail Conversion'},{id:'csat',label:'CSAT'},{id:'reviews',label:'Google Reviews'},{id:'bwa',label:'BWA'}],
+   cols: v => WEEKS.map(w=>({k:String(w.i), l:w.l, sub:'w/e · '+({total:'/35',arpu:'/10',retail:'/10',csat:'/15',reviews:'/15',bwa:'/20'}[v]), now:w.i===WEEKS.length-1})),
+   val: (n,v,k) => {
+     const c = DATA.consw[n]; if(!c) return null; const i=+k;
+     if(v==='arpu' || v==='retail'){ const j=i-ATTR_FROM; const x = j>=0 && c.c[j]; if(!x) return null;
+       if(v==='arpu') return x[0]==null?null:{v:x[0], txt:f1(x[0]), sub:peso(x[1])};
+       return x[2]==null?null:{v:x[2], txt:f1(x[2]), sub:f1(x[3])+'%'}; }
+     if(v==='reviews'){ const r=c.g[i]; return r==null?null:{v:Math.min(15,5*r), txt:f1(Math.min(15,5*r)), sub:r+' review'+(r===1?'':'s')}; }
+     return null;
+   },
+   why: (v,k) => ({total:'CSAT and BWA have no data, so the Consistency total is not shown',
+     arpu:'Before 3 Aug: barber sales attribution not loaded. After: no bookings that week', retail:'Before 3 Aug: attribution not loaded. Podium and roving weeks: retail not fully credited to barbers',
+     csat:'Chair Check has test rows only', reviews:'No bookings that week, or not yet on the roster', bwa:'No Head Barber checklist data yet'}[v]) },
+
+ retention: { host:'g-retention', rows:'barbers',
+   views:[{id:'life',label:'Lifetime Retention Rate'},{id:'nrr',label:'New Client Return Rate'}],
+   cols: v => MONTHS.map(m=>({k:m.k,l:m.l, now:m.k==='09', sub: v==='life' ? (m.k==='09'?'as at 6 Sep':'as at month end') : 'first visit that month'})),
+   val: (n,v,k) => {
+     const r = DATA.ret[n]; if(!r) return null;
+     if(v==='life'){ const i=+k-1; return r.l[i]==null?null:{v:r.l[i], txt:f1(r.l[i])+'%', sub:r.lc[i].toLocaleString('en-PH')+' clients'}; }
+     const x = r.c && r.c[k]; return x ? {v:x[2], txt:f1(x[2])+'%', sub:x[1]+' of '+x[0]} : null;
+   },
+   why: (v,k) => v==='nrr' && +k>=7 ? 'Return window not yet closed as at 6 Sep' : 'No clients with this barber yet, or no name map' },
+
+ foh: { host:'g-foh', rows:'foh',
+   views:[{id:'total',label:'Total'},{id:'cc',label:'Contact Capture'},{id:'tm',label:'Transaction Match'},{id:'tag',label:'Customer Tagging'},{id:'err',label:'Reporting Errors'}],
+   cols: v => monthCols(v==='total'?'/100':'/25'), val: ()=>null,
+   why: v => ({total:'None of the four metrics can be credited to an FOH yet', cc:'DOR has no FOH-on-duty field to credit the day to', tm:'ESD name + number parsing not live', tag:'ESD tag parsing not live', err:'Error log not in Supabase'}[v]) }
+};
+
+/* ---------- grid ---------- */
+function makeGrid(cfg){
+  const host = document.getElementById(cfg.host);
+  const st = { view: cfg.views[0].id, sort: null, open: new Set() };
+  const ctl = document.createElement('div'); ctl.className='controls';
+  const frame = document.createElement('div'); frame.className='gridframe';
+  const wrap = document.createElement('div'); wrap.className='gridwrap'; frame.appendChild(wrap);
+  host.append(ctl, frame);
+
+  function controls(){
+    let h = '<div class="ctrl"><label>View</label><div class="seg">'
+      + cfg.views.map(v=>'<button data-v="'+v.id+'" class="'+(st.view===v.id?'on':'')+'">'+esc(v.label)+'</button>').join('') + '</div></div>';
+    if(cfg.items){
+      h += '<div class="ctrl"><label>Criterion</label><select class="pick" data-item><option value="">—</option>'
+        + cfg.items.map(g=>'<optgroup label="'+esc(g.group)+'">'+g.items.map(i=>'<option value="'+i[0]+'"'+(st.view===i[0]?' selected':'')+'>'+esc(i[1])+'</option>').join('')+'</optgroup>').join('')
+        + '</select></div>';
+    }
+    if(cfg.rows==='barbers') h += '<div class="ctrl"><button class="ghost" data-all>'+(st.open.size===BRANCHES.length?'Collapse all':'Expand all')+'</button></div>';
+    h += '<span class="sortnote" data-note></span>';
+    ctl.innerHTML = h;
+  }
+  ctl.addEventListener('click', e=>{
+    const b = e.target.closest('button'); if(!b) return;
+    if(b.dataset.v){ st.view=b.dataset.v; st.sort=null; }
+    if(b.hasAttribute('data-all')){ st.open = st.open.size===BRANCHES.length ? new Set() : new Set(BRANCHES.map(x=>x[0])); }
+    render();
+  });
+  ctl.addEventListener('change', e=>{ if(e.target.dataset.item!==undefined && e.target.value){ st.view=e.target.value; st.sort=null; render(); } });
+  wrap.addEventListener('click', e=>{
+    const t = e.target.closest('[data-tog]'); if(t){ const id=t.dataset.tog; st.open.has(id)?st.open.delete(id):st.open.add(id); render(); return; }
+    const th = e.target.closest('th[data-col]'); if(th){ st.sort = th.dataset.col; render(); }
+  });
+
+  function cell(r, c, v){
+    if(!r) return '<td class="'+(c.pre?'pre ':'')+(c.lastpre?'lastpre ':'')+(c.now?'now':'')+'" title="'+esc(cfg.why(st.view,c.k))+'"><span class="cell"><span class="v none">—</span></span></td>';
+    return '<td class="'+(c.pre?'pre ':'')+(c.lastpre?'lastpre ':'')+(c.now?'now':'')+'"><span class="cell"><span class="v">'+r.txt+'</span>'+(r.sub?'<span class="m">'+esc(r.sub)+'</span>':'')+'</span></td>';
+  }
+  function render(){
+    controls();
+    const cols = cfg.cols(st.view);
+    const people = cfg.rows==='barbers' ? DATA.roster.map(x=>({b:x[0], n:x[1], tag:x[2]})) : DATA.foh.map(x=>({b:x[1], n:x[0], tag:x[1]+(x[2]==='Manager'?' · manager':'')}));
+    const V = (n,k) => cfg.val(n, st.view, k);
+    let sortKey = st.sort;
+    if(!sortKey){ for(let i=cols.length-1;i>=0;i--){ if(people.some(p=>V(p.n,cols[i].k))){ sortKey=cols[i].k; break; } } }
+    const ci = sortKey ? cols.findIndex(c=>c.k===sortKey) : -1;
+    const cmp = (a,b) => {
+      for(let i=ci;i>=0;i--){ const x=V(a.n,cols[i].k), y=V(b.n,cols[i].k);
+        if(x&&y){ if(y.v!==x.v) return y.v-x.v; } else if(x||y) return x?-1:1; }
+      return a.n.localeCompare(b.n);
+    };
+    ctl.querySelector('[data-note]').textContent = ci>=0 ? 'Sorted by '+cols[ci].l+(st.sort?'':' (latest with data)')+' · click a column to re-sort' : 'No data in this view · sorted by name';
+
+    let h = '<table class="g"><thead><tr><th class="lbl">'+(cfg.rows==='barbers'?'Branch, barber':'Front of house')+'</th>'
+      + cols.map(c=>'<th data-col="'+c.k+'" class="sortable '+(c.pre?'pre ':'')+(c.lastpre?'lastpre ':'')+(c.now?'now ':'')+(c.k===sortKey?'sorted':'')+'">'+c.l+(c.k===sortKey?' ↓':'')+'<span class="hd-sub">'+(c.sub||'')+'</span></th>').join('')
+      + '</tr></thead><tbody>';
+    const nameCell = (p, lvl) => '<td class="lbl"><span class="rowname"><span class="tw spacer"></span><span class="nm">'+esc(p.n)+'</span>'+(p.tag?'<span class="tagx">'+esc(p.tag)+'</span>':'')+'</span></td>';
+    if(cfg.rows==='barbers'){
+      BRANCHES.forEach(([code,label])=>{
+        const kids = people.filter(p=>p.b===code).sort(cmp);
+        const open = st.open.has(code);
+        h += '<tr class="r lv0"><td class="lbl"><span class="rowname"><button class="tw" data-tog="'+code+'" aria-expanded="'+open+'">'+(open?'−':'+')+'</button><span class="nm">'+label+'</span><span class="tagx">'+kids.length+' barbers</span></span></td>';
+        cols.forEach(c=>{
+          const vs = kids.map(p=>V(p.n,c.k));
+          const all = vs.length && vs.every(Boolean);
+          if(!all){ h += '<td class="'+(c.pre?'pre ':'')+(c.lastpre?'lastpre ':'')+(c.now?'now':'')+'" title="Branch average shown only when every barber has a figure"><span class="cell"><span class="v none">—</span></span></td>'; return; }
+          const avg = vs.reduce((a,x)=>a+x.v,0)/vs.length;
+          const pct = /%$/.test(vs[0].txt);
+          h += cell({v:avg, txt:f1(avg)+(pct?'%':''), sub:'avg of '+vs.length}, c);
+        });
+        h += '</tr>';
+        if(open) kids.forEach(p=>{ h += '<tr class="r lv1">'+nameCell(p)+cols.map(c=>cell(V(p.n,c.k),c)).join('')+'</tr>'; });
+      });
+    } else {
+      people.sort(cmp).forEach(p=>{ h += '<tr class="r lv1">'+nameCell(p)+cols.map(c=>cell(V(p.n,c.k),c)).join('')+'</tr>'; });
+    }
+    wrap.innerHTML = h + '</tbody></table>';
+    if(cfg.scrollEnd && !st.scrolled){ wrap.scrollLeft = wrap.scrollWidth; st.scrolled = true; }
+  }
+  render();
+}
+Object.values(CFG).forEach(makeGrid);
+
+/* ---------- hiring ---------- */
+(function(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const rows = DATA.hire.map(r=>{ const d = r[3] ? new Date(r[3]+'T00:00:00') : null; return {code:r[0], role:r[1], br:r[2], d, days: d ? Math.round((d-today)/864e5) : null}; })
+    .sort((a,b)=> (a.d?0:1)-(b.d?0:1) || (a.d&&b.d ? a.d-b.d : 0) || a.code.localeCompare(b.code));
+  const fmt = d => d.toLocaleDateString('en-GB',{weekday:'short', day:'numeric', month:'short', year:'numeric'});
+  const BRN = {HO:'Head Office', TRN:'Trinoma (upcoming)'};
+  const next = rows.find(r=>r.d);
+  const overdue = rows.filter(r=>r.days!=null && r.days<0).length;
+  document.getElementById('hire-stat').innerHTML =
+    '<div><span class="k">Open seats</span><span class="v">'+rows.length+'</span><span class="s">'+rows.filter(r=>!r.d).length+' without a fill-by date</span></div>'
+    + '<div><span class="k">Next due</span><span class="v">'+(next? (next.days<0? Math.abs(next.days)+' days late' : next.days+' days') : '—')+'</span><span class="s">'+(next? esc(next.role)+' · '+fmt(next.d) : '')+'</span></div>'
+    + '<div><span class="k">Overdue</span><span class="v">'+overdue+'</span><span class="s">past their fill-by date</span></div>';
+  const pill = r => r.d==null ? '<span class="pill">No date set</span>' : r.days<0 ? '<span class="pill red">'+Math.abs(r.days)+' days overdue</span>' : r.days<=14 ? '<span class="pill amber">'+r.days+' days left</span>' : '<span class="pill">'+r.days+' days left</span>';
+  document.getElementById('hire-tbl').innerHTML = '<thead><tr><th>Seat</th><th>Role</th><th>Branch</th><th>Fill by</th><th>Status</th></tr></thead><tbody>'
+    + rows.map(r=>'<tr><td class="mono">'+r.code+'</td><td class="t">'+esc(r.role)+'</td><td>'+(BRN[r.br]||r.br)+'</td><td class="mono">'+(r.d?fmt(r.d):'—')+'</td><td>'+pill(r)+'</td></tr>').join('') + '</tbody>';
+})();
+
+/* ---------- gaps ---------- */
+(function(){
+  const G = [
+    ['Total Score','Every month, every barber','Mastery has no BMA for any 2026 month yet, and Consistency is missing CSAT and BWA. A total is not shown unless every part exists.'],
+    ['Mastery · months','Jan to Sep, all views','The BMA has not been run on any barber yet.'],
+    ['Mastery · A1 / A2','Old rubric, not dated','From the Notion "Barber scoring results" export (15 categories, 1 to 5 each). The total is scaled to 100 as sum ÷ (5 × categories scored) × 100, leaving blanks out: Mel Gaco\'s A2 scored 12 of 15, Frederick dela Cruz\'s A1 14 of 15. Only the 9 categories that exactly match a BMA item are shown, plus the Technical pillar, where all 5 items match. Consultation, Client Satisfaction, Knowledge and Service Ritual are dashed.'],
+    ['Mastery · A1 / A2','Barbers not in the workbook','Carlo Ybas, Jerome Echipare, Rodolfo Marcial, Dave Taguinod, Jason Torre and Princeso R. Reambillo Jr. The workbook\'s "Jojo *" (Leviste) matches no one on the roster and was left out. Robin and Rafael (not active) and the duplicate Noel row were dropped.'],
+    ['Consistency · ARPU, Retail','Weeks before 3 Aug','Barber sales attribution in SML only passes the coverage checks for 3 Aug to 6 Sep. Earlier weeks wait on the H1 SML load.'],
+    ['Consistency · Retail','Podium, and roving barbers','At Podium only 27 of 40 retail lines were credited to a barber (3 Aug to 6 Sep), so a barber there would be undercounted. Pinol and Ybas worked Podium weeks.'],
+    ['Consistency · CSAT','All months','Chair Check holds only 6 test responses (4 Sep).'],
+    ['Consistency · BWA','All months','The Head Barber weekly checklist has no data source yet.'],
+    ['Consistency · ARPU target','Rule applied','Branch targets from Chief\'s 2026 target table (11 Sep): BGC ₱1,000, PPM ₱950, POD ₱920, LEV ₱960, EROD ₱900. These are not in Supabase targets yet. A roving barber\'s target is weighted by his foot traffic at each branch. ARPU = SML barber net sales ÷ YBE kept bookings.'],
+    ['Consistency · Google Reviews','Rule applied','Counts only reviews that name the barber, praise him, and are matched or confirmed by Chief. The 4 judgement calls stay out. Harold Dare\'s 11 in August include the 22 Aug burst: counted, not ruled on.'],
+    ['Consistency · weeks','Rule applied','One column per week, Monday to Sunday, labelled by the Sunday it ends (29 Dec 2025 to 6 Sep 2026). A week with no bookings for the barber is dashed, not scored zero. The 27 Jul week is dashed for ARPU and Retail because SML does not cover every open day that week.'],
+    ['Jason Torre','Every figure','No YBE or SML name mapping, so none of his bookings or sales can be attributed to him.'],
+    ['Mhel John Trimor','Weeks from 3 Aug','Active on the roster but has no kept YBE bookings after the week ending 2 Aug.'],
+    ['Retention · New Client Return Rate','Jul, Aug, Sep','The return window has not closed as at 6 Sep. Windows are the Q3 figures (BGC 52, LEV / PPM 54, POD 56, EROD 57 days) and apply to every cohort. A client\'s window is set by the branch of their first visit, and a return is a later kept booking with the same barber at any branch.'],
+    ['Retention · Lifetime','Rule applied','Of every phone number the barber has ever served (YBE back to 2017), the share with 2 or more kept visits with him, as at month end.'],
+    ['Front of House','Every figure','DOR has no FOH-on-duty field, so a day cannot be credited to anyone. Transaction Match and Tagging need ESD parsing, which is not live. The Reporting Errors log is not in Supabase.']
+  ];
+  document.getElementById('gaps-tbl').innerHTML = '<thead><tr><th>#</th><th>Where</th><th>Scope</th><th>Why</th></tr></thead><tbody>'
+    + G.map((g,i)=>'<tr><td class="n">'+String(i+1).padStart(2,'0')+'</td><td class="t">'+esc(g[0])+'</td><td class="o">'+esc(g[1])+'</td><td>'+esc(g[2])+'</td></tr>').join('') + '</tbody>';
+})();
+</script>
