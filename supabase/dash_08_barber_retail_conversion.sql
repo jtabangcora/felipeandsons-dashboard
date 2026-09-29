@@ -13,6 +13,7 @@
 --      [ name, net_sales_sml, coalesce(retail_net_sml,0), ft_total_sml,
 --        days_worked_sml, coalesce(retail_buyers,0), coalesce(ft_total_sml_all_tickets,0) ]
 --    So per-barber retail conversion = element[5] / element[6]  (retail buyers ÷ total tickets),
---    always between 0 and 100%. The page uses barberRatio(b, 5, 6) via
---    derivedTree('buyers','clients','All branches', { barberNum:5, barberDen:6 }).
---    Branch/company conversion rows stay DOR-based (buyers ÷ clients served).
+--    always between 0 and 100%. The Conversion section is ONE combined table (fmt 'conv'):
+--    each cell shows the rate + clients converted + of clients served. Barber rows use
+--    [element[5], element[6]] (barberConv); branch/company rows stay DOR-based
+--    (buyers ÷ clients served) so they never dash when a barber-week is gated.

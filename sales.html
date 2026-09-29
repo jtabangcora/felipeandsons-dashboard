@@ -1744,6 +1744,7 @@ const F = {
   duo:   v=> (v==null) ? '—' : nd(v[0])+' / '+nd(v[1]),
   ret3:  v=> (v==null) ? '—' : nd(v[0])+' / '+nd(v[1])+' / '+pd(v[2]),
   ret4:  v=> (v==null) ? '—' : nd(v[0])+' / '+nd(v[1])+' / '+nd(v[2])+' / '+pd(v[3]),
+  conv:  v=> (v==null) ? '—' : pd((Array.isArray(v) && v[1]) ? v[0]/v[1] : null),
   peso0: v=> v==null? '—' : '₱'+nfmt(Math.round(v),0)
 };
 /* the walk-in / booked pair reads as one labelled stack, each figure with its
@@ -1779,6 +1780,19 @@ function retHTML(fmt, v){
     rc('incl. new to F&S', v?v[0]:null, true);  // subset of new-to-barber, NOT added to the base
   }
   return s + '</span>';
+}
+/* conversion cell: v = [converted, clients]. Leads with the rate, then the two counts
+   that make it — clients converted, of clients served — so one cell answers both
+   "how many did they convert" and "what share is that". */
+function convHTML(v){
+  if(v==null) return '<span class="ret"><span class="rv none">—</span></span>';
+  const b = v[0], t = v[1];
+  const rate = (t) ? b/t : null;
+  return '<span class="ret">'
+    + '<span class="rv'+(rate==null?' none':'')+'">'+pd(rate)+'</span>'
+    + '<span class="rc"><i>converted</i><b'+(b==null?' class="none"':'')+'>'+nd(b)+'</b></span>'
+    + '<span class="rc"><i>of clients</i><b'+(t==null?' class="none"':'')+'>'+nd(t)+'</b></span>'
+    + '</span>';
 }
 function signPeso(v){ return (v<0?'−':'+')+'₱'+nfmt(Math.abs(Math.round(v)),0); }
 function signPeso2(v){ return (v<0?'−':'+')+'₱'+nfmt(Math.abs(v),2); }
@@ -1891,10 +1905,10 @@ function buildGrid(host, cfg){
     /* multi-part cells name each figure; movement and share do not apply to a run
        of counts, so they render and return before that logic. retention leads with
        its rate; the walk-in/booked pair reads as a labelled stack. */
-    if(fmt==='duo' || fmt==='ret3' || fmt==='ret4'){
+    if(fmt==='duo' || fmt==='ret3' || fmt==='ret4' || fmt==='conv'){
       if(st.mode==='movement') return { html:'<span class="v mv flat">—</span>', editable:false };
       const raw = r.val(p.key);
-      return { html: (fmt==='duo') ? partsHTML(raw) : retHTML(fmt, raw), editable:false };
+      return { html: (fmt==='duo') ? partsHTML(raw) : (fmt==='conv') ? convHTML(raw) : retHTML(fmt, raw), editable:false };
     }
     const mv  = r.movement || cfg.movement || 'pct';
     const good = (r.upIsGood!==undefined) ? r.upIsGood : (cfg.upIsGood!==false);
@@ -2366,6 +2380,23 @@ function barberRatio(b, numIdx, denIdx){
   const rows = rosterRows(g, b.code, function(from){
     return function(pk){ return rate(pk, from); };
   }, true);
+  return rows.length ? rows : barberStub(b, 'no branch barbers attributed');
+}
+/* per-barber conversion rows: [retail buyers (idx 5), total tickets (idx 6)] from SML.
+   Independent of the branch DOR conversion, so a gated barber-week dashes on its own
+   line without ever pulling the branch rate down. */
+function barberConv(b){
+  const roster = BARBER_ROSTER[b.code];
+  if(!roster || !roster.length) return barberStub(b, 'no attribution source');
+  const g = splitRoster(roster, b.code);
+  const rows = rosterRows(g, b.code, function(from){
+    return function(pk){
+      const den = sumNames(from, function(n){ return barberVal(pk,b.code,n,6); });
+      if(den==null) return null;
+      const num = sumNames(from, function(n){ return barberVal(pk,b.code,n,5); });
+      return [num||0, den];
+    };
+  });
   return rows.length ? rows : barberStub(b, 'no branch barbers attributed');
 }
 function rowsUnitBranch(metric, opts){
@@ -2851,19 +2882,19 @@ const UH = document.getElementById('unit-haberdashery');
 
 /* ---- 07 · CONVERSION RATE ---- */
 (function(){
-  const el = section(UR, { id:'m-conversion', n:'07', title:'Conversion Rate', src:'DOR · per-barber from SML',
-    extra:'<div class="sub-label">Buyers</div><div data-grid2></div>' });
+  const el = section(UR, { id:'m-conversion', n:'07', title:'Conversion Rate', src:'branch DOR · per barber from SML' });
   buildGrid(el.querySelector('[data-grid]'), {
-    fmt:'pct', movement:'pp', upIsGood:true, windows:[6,9,13], trailN:6, share:false,
-    rowHead:'Conversion · buyers ÷ clients served · per barber: retail buyers ÷ customers (SML)',
-    cellModes:[{id:'value',label:'Value + movement'},{id:'movement',label:'Movement only'}],
-    tree: derivedTree('buyers','clients','All branches', { barberNum:5, barberDen:6 })
-  });
-  buildGrid(el.querySelector('[data-grid2]'), {
-    fmt:'int', movement:'count', upIsGood:true, windows:[6,9,13], trailN:6, editMetric:'buyers',
-    rowHead:'Buyers', countLabel:'Count',
-    cellModes:[{id:'value',label:'Value + movement'},{id:'movement',label:'Movement only'}],
-    tree: ()=> rowsUnitBranch('buyers', { totalName:'All branches' })
+    fmt:'conv', windows:[6,9,13], trailN:6, share:false,
+    rowHead:'Retail conversion · clients converted ÷ clients served',
+    cellModes:[{id:'value',label:'Converted + rate'}],
+    /* branch/company rows are DOR buyers ÷ clients (always shown, never dashed by a
+       barber gap); barber rows are SML retail buyers ÷ their tickets. */
+    tree: ()=> [{ id:'ALL', name:'All branches', level:0, derived:true, fmt:'conv',
+      val: pk=>{ const b=sumBranches('buyers',pk), c=sumBranches('clients',pk); return (b==null||c==null)?null:[b,c]; },
+      children: BRANCHES.map(b=>({ id:b.code, name:b.name, level:1, derived:true, fmt:'conv',
+        val: pk=>{ const x=raw('buyers',pk,b.code), c=raw('clients',pk,b.code); return (x==null||c==null)?null:[x,c]; },
+        cov: pk=>{ const d=get('daysReported',pk,b.code); return (d!=null && d<7) ? d+' of 7 days' : ''; },
+        children: barberConv(b) })) }]
   });
 })();
 
