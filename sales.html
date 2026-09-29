@@ -388,6 +388,11 @@ tr.sep td{ height: 12px; border-bottom: 1px solid var(--rule-2); background: var
   font-family: var(--ffm); font-variant-numeric: tabular-nums; font-size: 10px; font-weight: 400; color: var(--ink-3);
 }
 .cell .ret .rc b.none{ color: var(--ink-4); }
+/* a subset line (e.g. new-to-F&S inside new-to-barber): clearly subordinate, so it
+   never reads as another term added into the rate's denominator */
+.cell .ret .rc.sub{ margin-top: 1px; opacity: .9; }
+.cell .ret .rc.sub i{ text-transform: none; font-style: italic; font-size: 7.5px; letter-spacing: 0; color: var(--ink-4); }
+.cell .ret .rc.sub b{ font-size: 9px; color: var(--ink-4); }
 
 td.editable .v{ cursor: text; border-bottom: 1px dotted var(--rule-3); border-radius: 0; }
 td.editable:hover .v{ border-bottom: 1px solid var(--ink); }
@@ -1759,15 +1764,20 @@ function partsHTML(v){
    ret3 is a branch (new / repeat), ret4 a barber (new to branch / to him / repeat). */
 function retHTML(fmt, v){
   const rate = (v==null) ? null : v[fmt==='ret3' ? 2 : 3];
-  const counts = (fmt==='ret3')
-    ? [['New', v?v[0]:null], ['Repeat', v?v[1]:null]]
-    : [['New to branch', v?v[0]:null], ['New to barber', v?v[1]:null], ['Repeat', v?v[2]:null]];
   let s = '<span class="ret">'
         + '<span class="rv'+(rate==null?' none':'')+'">'+pd(rate)+'</span>';
-  counts.forEach(function(c){
-    s += '<span class="rc"><i>'+c[0]+'</i>'
-       + '<b'+(c[1]==null?' class="none"':'')+'>'+nd(c[1])+'</b></span>';
-  });
+  function rc(label, val, sub){
+    s += '<span class="rc'+(sub?' sub':'')+'"><i>'+label+'</i>'
+       + '<b'+(val==null?' class="none"':'')+'>'+nd(val)+'</b></span>';
+  }
+  if(fmt==='ret3'){                 // branch: new + repeat are the rate's own base
+    rc('New', v?v[0]:null);
+    rc('Repeat', v?v[1]:null);
+  } else {                          // barber: rate = repeat / (new to barber + repeat)
+    rc('New to barber', v?v[1]:null);
+    rc('Repeat', v?v[2]:null);
+    rc('incl. new to F&S', v?v[0]:null, true);  // subset of new-to-barber, NOT added to the base
+  }
   return s + '</span>';
 }
 function signPeso(v){ return (v<0?'−':'+')+'₱'+nfmt(Math.abs(Math.round(v)),0); }

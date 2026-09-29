@@ -1792,8 +1792,11 @@ const F = {
      each part dashes on its own: half a row known is still half a row known, and a
      missing part must never take the whole cell down with it. */
   duo:   v=> (v==null) ? '—' : nd(v[0])+' / '+nd(v[1]),
-  ret3:  v=> (v==null) ? '—' : nd(v[0])+' / '+nd(v[1])+' / '+pd(v[2]),
-  ret4:  v=> (v==null) ? '—' : nd(v[0])+' / '+nd(v[1])+' / '+nd(v[2])+' / '+pd(v[3]),
+  /* rate first, then the fraction that produces it — repeat over the identifiable base
+     (new + repeat), so the denominator is explicit and never read as a sum of every part.
+     ret4 also shows new-to-F&S, which is a SUBSET of new-to-barber, not added to the base. */
+  ret3:  v=> (v==null) ? '—' : pd(v[2])+' · '+nd(v[1])+' of '+nd((v[0]||0)+(v[1]||0)),
+  ret4:  v=> (v==null) ? '—' : pd(v[3])+' · '+nd(v[2])+' of '+nd((v[1]||0)+(v[2]||0))+' · '+nd(v[0])+' new to F&S',
   peso0: v=> v==null? '—' : '₱'+nfmt(Math.round(v),0)
 };
 function signPeso(v){ return (v<0?'−':'+')+'₱'+nfmt(Math.abs(Math.round(v)),0); }
