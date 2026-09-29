@@ -13,6 +13,17 @@ end $$;
 -- Run manually right after a data load for immediate freshness:
 --   select dash.refresh_all();
 
--- Nightly auto-refresh at 02:30 Manila (18:30 UTC). Requires pg_cron.
--- (Left commented; enable once approved.)
+-- Service-role-only PostgREST wrapper so data-load scripts (_load/*.py, which POST
+-- with the service_role key) can refresh via RPC. NOT granted to anon.
+create or replace function public.dash_refresh_all()
+returns void language plpgsql security definer
+set search_path = public, pg_temp set statement_timeout = '120s' as $$
+begin
+  perform dash.refresh_all();
+end $$;
+revoke execute on function public.dash_refresh_all() from anon;
+grant execute on function public.dash_refresh_all() to service_role;
+
+-- Chosen mechanism: load_h1_sml.py calls this at the end of each load.
+-- (Nightly pg_cron alternative, left disabled:)
 --   select cron.schedule('dash_refresh_mv', '30 18 * * *', $$select dash.refresh_all();$$);
