@@ -1912,10 +1912,42 @@ function buildGrid(host, cfg){
   }
   function tree(){ return cfg.tree(st); }
 
+  /* a barber list reads best-first: ordered by each barber's average over the last
+     trailN periods of the window, highest to lowest. a barber with no figures in that
+     span sinks to the bottom; non-barber rows (Others, stubs) keep their place after. */
+  function rankScalar(v, fmt){
+    if(v==null) return null;
+    if(!Array.isArray(v)) return v;
+    if(fmt==='conv') return (v[0]!=null && v[1]) ? v[0]/v[1] : null;
+    if(fmt==='duo')  return (v[0]==null && v[1]==null) ? null : (v[0]||0)+(v[1]||0);
+    return v[v.length-1];                         // ret3 / ret4: the rate is the last element
+  }
+  function rankScore(r){
+    const n = cfg.trailN || (PER===WEEKS?6:4);
+    const fmt = r.fmt || (cfg.fmtFor ? cfg.fmtFor(st) : null) || cfg.fmt;
+    const span = periodWindow().slice(-n);
+    if(fmt==='conv'){                             // pooled: converted ÷ clients over the span,
+      let b=0, t=0;                               // so a five-client week cannot top the list
+      span.forEach(p=>{ const v=r.val(p.key); if(Array.isArray(v) && v[0]!=null && v[1]){ b+=v[0]; t+=v[1]; } });
+      return t ? b/t : null;
+    }
+    let s=0, k=0;
+    span.forEach(p=>{
+      const x = rankScalar(r.val(p.key), fmt);
+      if(x!=null && isFinite(x)){ s+=x; k++; }
+    });
+    return k ? s/k : null;
+  }
+  function ranked(kids){
+    if(!kids.some(c=>c.barber)) return kids;
+    const scored = kids.filter(c=>c.barber).map(c=>({ c:c, s:rankScore(c) }));
+    scored.sort((a,b)=> (a.s==null) - (b.s==null) || (b.s||0) - (a.s||0));
+    return scored.map(x=>x.c).concat(kids.filter(c=>!c.barber));
+  }
   function flatten(rows, out, depth){
     rows.forEach(r=>{
       out.push(r);
-      if(r.children && r.children.length && st.open.has(r.id)) flatten(r.children, out, depth+1);
+      if(r.children && r.children.length && st.open.has(r.id)) flatten(ranked(r.children), out, depth+1);
     });
     return out;
   }
@@ -2347,7 +2379,7 @@ function othersRow(idBase, groups, valFn, level, derived){
 /* barbers first, the roving barbers under them, Others last */
 function rosterRows(g, idBase, mkVal, derived){
   const row = function(e, roving){
-    const r = { id:idBase+'/'+e.name, name:e.name, level:2, derived:!!derived, val: mkVal(e.from) };
+    const r = { id:idBase+'/'+e.name, name:e.name, level:2, barber:true, derived:!!derived, val: mkVal(e.from) };
     if(roving) r.tag = 'roving';
     return r;
   };
