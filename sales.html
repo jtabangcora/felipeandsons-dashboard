@@ -734,7 +734,8 @@ async function loadREAL(){
   }
   load.remove();
   /* domains whose source is not yet in the warehouse: keep the shape, dash the cells */
-  if(!real.hbd) real.hbd={sales:{},funnel:{}};
+  if(!real.hbd) real.hbd={sales:{},funnel:{},collect:{}};
+  else { real.hbd.sales=real.hbd.sales||{}; real.hbd.funnel=real.hbd.funnel||{}; real.hbd.collect=real.hbd.collect||{}; }
   if(!real.bma) real.bma={};
   return real;
 }
@@ -2241,6 +2242,16 @@ function targetBlockHTML(o){
     h += '<div class="pn '+(over>=0?'up':'dn')+'">'+(over>=0?'Over by ':'Short by ')+F.peso2(Math.abs(over))+'</div>';
   }
   h += '<div class="foot">Run rate: last four weeks</div></div>';
+  if(o.collection){
+    const c = o.collection;
+    const pct = (c.rev && c.col!=null) ? c.col/c.rev : null;
+    h += '<div class="tb-grp"><div class="gl">'+(o.qLabel||'This quarter')+' &middot; collection</div>'
+       + line('Revenue (receivable)', c.rev==null?'—':F.peso2(c.rev))
+       + line('Collected',            c.col==null?'—':F.peso2(c.col))
+       + line('% collected',          pct==null?'—':F.pct(pct))
+       + line('Still receivable',     c.out==null?'—':F.peso2(c.out))
+       + '</div>';
+  }
   if(o.notes && o.notes.length){
     h += '<div class="tb-grp"><div class="gl">Note</div>'
        + o.notes.map(function(n){ return '<div class="tb-note">'+n+'</div>'; }).join('')
@@ -2279,6 +2290,7 @@ function targetBlock(o){
     qNeed:   paceRange(o.MT, o.T, 'ALL', qb.start, end),
     qActual: qActual,
     projected: (qActual==null || rate==null || qTarget==null) ? null : qActual + rate*remain,
+    collection: o.collection,
     notes: o.notes
   });
 }
@@ -2698,13 +2710,16 @@ const UH = document.getElementById('unit-haberdashery');
       + '</div>'
       + '</div>';
 
+    const col = (REAL.hbd.collect && REAL.hbd.collect[p.key.slice(1)]) || null;
     el.querySelector('[data-tblock]').innerHTML = targetBlock({
       title:'Haberdashery against target', win:win,
       MT:MT_HBD, T:T_HBD, QT:Q_HBD,
       rateVal: pk => { const x = hbdSales(pk); return x && x[0]!=null ? x[0] : null; },
       monthActual: v(0), qActual: v(3),
+      collection: col,
       notes: ['Monthly target ₱1,340,000 is approved (H2 2026 master document). The quarter figure is derived: three approved months summed — no quarter row exists in the targets table.',
-              'Sales are order intake by order date from the Operations workbook, blank location read as in-house. Four order rows carry no order date and are excluded.']
+              'Sales are order intake recognised on order date, from the HBD table; in-house and events split on channel (blank read as in-house). Orders with no order date are excluded.',
+              'Collected is the down-payment and balance received against this quarter’s orders; still receivable is their outstanding balance.']
     });
   }
 
