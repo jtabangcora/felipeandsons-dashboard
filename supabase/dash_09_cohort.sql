@@ -1,0 +1,22 @@
+-- Monthly "new-to-branch first-return rate" cohort, per branch (customers page).
+-- Full objects live in the DB migration history; this documents them.
+--
+-- dash.mv_cohort  — materialized view, per (branch, cohort month).
+--   Attended + identifiable visit = status in ('Finished','Checked-in','Pending') and phone is not null; identity = phone.
+--   Cohort (c_cnt) = distinct phones whose FIRST-EVER attended visit to that branch (min date across all history)
+--     falls in the month; restricted to cohort months >= 2026-01.
+--   Returned (r_cnt) = those with a later attended visit to the SAME branch by the last day of month M+2
+--     (window_end = date_trunc('month', first) + interval '3 months' - 1 day). Jan cohort scored by 31 Mar.
+--   Granted select to anon, authenticated.
+--
+-- dash.cohort_block()  — reads the MV, returns:
+--   { "months":[...asc...], "matureThrough":"YYYY-MM",
+--     "rows": { "ALL":{"YYYY-MM":{"c":int,"r":int},...}, "BGC":{...}, "PPM":{...}, "POD":{...}, "LEV":{...}, "EROD":{...} } }
+--   ALL = branch-level pooled (a customer new to two branches counts once in each).
+--   matureThrough = latest month M whose (last day of M+2) <= data_through (max DOR.date where channel='BGC').
+--   Page shows months after matureThrough as provisional (window not yet closed).
+--
+-- public.dash_sales_full wrapper  — now merges cohort:
+--   select dash.sales_full(p_end,p_n) || {source} || {hbd} || {cohort: dash.cohort_block()}
+--
+-- dash.refresh_all()  — now also runs: refresh materialized view dash.mv_cohort;

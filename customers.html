@@ -565,6 +565,21 @@ table.g.inertT td{ height: 32px; }
 }
 .sub-label{ max-width: 92ch; }
 
+/* ---------------- cohort table (new-to-branch first-return rate) ---------------- */
+.ct-block{ flex-basis: 100%; }
+.ct-wrap{ overflow-x: auto; padding: 4px 18px 0; }
+.ctab{ border-collapse: collapse; width: 100%; }
+.ctab th, .ctab td{ padding: 7px 10px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+.ctab thead th{ font-family: var(--ffm); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-4); font-weight: 400; }
+.ctab th.ct-l, .ctab td.ct-l{ text-align: left; }
+.ctab td.ct-l{ font-size: 12.5px; color: var(--ink); }
+.ctab tbody tr:first-child td{ font-weight: 500; }
+.ctab .ct-r{ display: block; font-family: var(--ffm); font-variant-numeric: tabular-nums; font-size: 11.5px; color: var(--ink); }
+.ctab .ct-c{ display: block; font-family: var(--ffm); font-size: 8.5px; color: var(--ink-4); }
+.ctab td.ct-n{ color: var(--ink-4); }
+.ctab td.ct-p .ct-r{ color: var(--ink-3); font-style: italic; }
+.ctab th.ct-p{ color: var(--ink-3); font-style: italic; }
+
 /* ---------------- title ----------------
    The wordmark is a heavy grotesque, uppercase and set tight. The title speaks the
    same way: stacked, set solid, no italic and no flourish. Weight is the whole idea,
@@ -2630,11 +2645,43 @@ const UB = document.getElementById('unit-barbershop');
       + '</div>';
   }
 
+  /* monthly cohort: of each month's brand-new-to-branch customers, the share who came
+     back to the branch by the end of month M+2 (Jan scored by 31 Mar). Not week-driven —
+     it is a standing monthly picture — and sits alongside the lifetime blocks above. */
+  const MON3 = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  function cohortTable(){
+    const co = REAL.cohort;
+    if(!co || !co.months || !co.months.length) return '';
+    const mlab = m => MON3[parseInt(m.slice(5,7),10)-1] + " '" + m.slice(2,4);
+    const mt = co.matureThrough || '';
+    const cell = (node,m)=>{
+      const d = co.rows[node] && co.rows[node][m];
+      if(!d || !d.c) return '<td class="ct-n">—</td>';
+      const prov = m > mt;
+      return '<td class="'+(prov?'ct-p':'')+'"><span class="ct-r">'+F.pct(d.r/d.c)+'</span>'
+           + '<span class="ct-c">'+nd(d.r)+'/'+nd(d.c)+'</span></td>';
+    };
+    const rowFor = (node,name)=> '<tr><td class="ct-l">'+name+'</td>'
+      + co.months.map(m=>cell(node,m)).join('')+'</tr>';
+    return '<div class="rblock ct-block">'
+      + '<h3>New-to-branch first-return rate<span class="w">by cohort month · returned by end of M+2</span></h3>'
+      + '<div class="ct-wrap"><table class="ctab"><thead><tr><th class="ct-l">Branch</th>'
+      + co.months.map(m=>'<th class="'+(m>mt?'ct-p':'')+'">'+mlab(m)+'</th>').join('')
+      + '</tr></thead><tbody>'
+      + rowFor('ALL','All branches')
+      + BRANCHES.map(b=>rowFor(b.code,b.name)).join('')
+      + '</tbody></table></div>'
+      + '<div class="rb-note">Each month is the branch’s brand-new customers that month; the rate is the share who returned by the end of the month after next (Jan → by 31 Mar). '
+      + 'Months after <b>'+(mt?mlab(mt):'—')+'</b> are provisional — their return window has not closed. Attended, phone-identified visits only (YBE).</div>'
+      + '</div>';
+  }
+
   function paint(){
     const p = WEEKS.filter(w=>w.key===PERIOD.W.end)[0];
     host.innerHTML =
         block('All branches', 'ALL', 'counted once each')
-      + BRANCHES.map(b=>block(b.name, b.code, '')).join('');
+      + BRANCHES.map(b=>block(b.name, b.code, '')).join('')
+      + cohortTable();
     lbl.textContent = 'Lifetime to ' + (p ? p.label.split('–').pop().trim() + ' ' + p.sub : 'the selected week');
   }
   const lbl = document.createElement('div');
