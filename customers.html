@@ -2984,20 +2984,30 @@ const UB = document.getElementById('unit-barbershop');
    The shape is here so the capture can be designed against a known output: when the
    field lands, `sourceRet` is the only function that changes. */
 const CUST_SOURCES = [
-  { code:'LIVE',  name:'Living in the area' },
-  { code:'WORK',  name:'Working in the area' },
   { code:'VISIT', name:'Visiting' },
-  { code:'FOR',   name:'Foreigner' },
-  { code:'NONE',  name:'Not captured' }
+  { code:'LIVE',  name:'Live in the Area' },
+  { code:'WORK',  name:'Work in the Area' }
 ];
 /* [ served, came2nd, came3rd, came4th, active, lapsed ] for a source within a scope,
    as at the end of the selected week. Scope is 'ALL', a branch code, or 'CODE/Barber'.
-   Returns null for every index until the source field exists. */
-function sourceRet(pk, source, scope, i){ return null; }
+   The MIX (index 0) is live from SML.source — cumulative distinct customers by origin
+   to the selected week-end. Retention (index >0) needs each customer's origin tied to
+   their whole history, which does not exist yet, so it dashes. Origin is not sliced by
+   barber, so a barber scope dashes too. */
+function sourceRet(pk, source, scope, i){
+  if(i > 0) return null;
+  if(scope.indexOf('/') >= 0) return null;
+  const node = REAL.source && REAL.source[scope === 'ALL' ? 'ALL' : scope];
+  const wk = node && node[pk.slice(1)];
+  if(!wk) return null;
+  if(source === 'ALL') return (wk.visit||0) + (wk.live||0) + (wk.work||0);
+  const v = wk[source.toLowerCase()];
+  return v == null ? null : v;
+}
 
 (function(){
   const el = section(UB, { id:'m-sources', n:'07', title:'Sources',
-    src:'field not built · structure only',
+    src:'SML · origin captured per sale from 16 Sep 2026',
     extra:'<div class="blocks" data-blocks></div>' });
   el.querySelector('[data-grid]').remove();
   const host = el.querySelector('[data-blocks]');
@@ -3074,7 +3084,7 @@ function sourceRet(pk, source, scope, i){ return null; }
       /* 1 · the mix — every source, whatever the lens, so the lens never hides the base */
       '<div class="rblock">'
       + '<h3>Where they came from<span class="w">'+scopeName()+'</span></h3>'
-      + '<div class="tb-grp"><div class="gl">Customers ever served, by source</div>'
+      + '<div class="tb-grp"><div class="gl">Customers by origin · cumulative since 16 Sep</div>'
       + CUST_SOURCES.map(function(s){
           const n = sourceRet(pk, s.code, scope, 0);
           return row(s.name, INT(n), PCT(share(n, allServed)), true);
@@ -3116,9 +3126,9 @@ function sourceRet(pk, source, scope, i){ return null; }
       + row('Served / returned', INT(allServed)+' / '+INT(sourceRet(pk,'ALL',scope,1)),
             PCT(share(sourceRet(pk,'ALL',scope,1), allServed)))
       + '</div>'
-      + '<div class="rb-note">No system captures where a customer lives, works or is visiting from. '
-      + 'Every figure on this section dashes until that field is captured &mdash; at booking in Yodel, '
-      + 'or as one more question on the CSAT slip.</div>'
+      + '<div class="rb-note">Origin is captured per sale in SML from 16 September 2026 &mdash; the mix above is real and '
+      + 'grows as capture continues. Retention by source needs each customer&rsquo;s origin tied to their whole history, '
+      + 'which does not exist yet, so those figures dash.</div>'
       + '</div>';
   }
 
