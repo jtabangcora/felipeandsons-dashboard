@@ -1,0 +1,18 @@
+-- Per-barber retail conversion (retail buyers ÷ total customers), from SML.
+-- Full dash.sales_full lives in the DB migration history; this documents the deltas.
+--
+-- 1) vw_weekly_barber gained two columns (same vw_barber_name_map barber mapping,
+--    same branch/week grain):
+--      retail_buyers            = count(distinct salesno) filter (where category = 'RETAIL')
+--      ft_total_sml_all_tickets = count(distinct salesno)            -- all categories (incl. retail-only)
+--    ft_total_sml_all_tickets is the conversion denominator (distinct tickets/customers),
+--    NOT ft_total_sml (which is service line-quantity) and NOT ft_total_sml_tickets
+--    (BARBER-category tickets only, which retail-only tickets can exceed).
+--
+-- 2) dash.sales_full barber array is now 7 elements:
+--      [ name, net_sales_sml, coalesce(retail_net_sml,0), ft_total_sml,
+--        days_worked_sml, coalesce(retail_buyers,0), coalesce(ft_total_sml_all_tickets,0) ]
+--    So per-barber retail conversion = element[5] / element[6]  (retail buyers ÷ total tickets),
+--    always between 0 and 100%. The page uses barberRatio(b, 5, 6) via
+--    derivedTree('buyers','clients','All branches', { barberNum:5, barberDen:6 }).
+--    Branch/company conversion rows stay DOR-based (buyers ÷ clients served).

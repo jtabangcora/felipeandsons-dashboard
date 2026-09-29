@@ -2851,13 +2851,13 @@ const UH = document.getElementById('unit-haberdashery');
 
 /* ---- 07 · CONVERSION RATE ---- */
 (function(){
-  const el = section(UR, { id:'m-conversion', n:'07', title:'Conversion Rate', src:'DOR',
+  const el = section(UR, { id:'m-conversion', n:'07', title:'Conversion Rate', src:'DOR · per-barber from SML',
     extra:'<div class="sub-label">Buyers</div><div data-grid2></div>' });
   buildGrid(el.querySelector('[data-grid]'), {
     fmt:'pct', movement:'pp', upIsGood:true, windows:[6,9,13], trailN:6, share:false,
-    rowHead:'Conversion rate · buyers ÷ clients served',
+    rowHead:'Conversion · buyers ÷ clients served · per barber: retail buyers ÷ customers (SML)',
     cellModes:[{id:'value',label:'Value + movement'},{id:'movement',label:'Movement only'}],
-    tree: derivedTree('buyers','clients','All branches')
+    tree: derivedTree('buyers','clients','All branches', { barberNum:5, barberDen:6 })
   });
   buildGrid(el.querySelector('[data-grid2]'), {
     fmt:'int', movement:'count', upIsGood:true, windows:[6,9,13], trailN:6, editMetric:'buyers',
