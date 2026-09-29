@@ -366,6 +366,7 @@ tr.sep td{ height: 12px; border-bottom: 1px solid var(--rule-2); background: var
 }
 .cell .pt .pv{
   font-family: var(--ffm); font-variant-numeric: tabular-nums; font-size: 10.5px; color: var(--ink-2);
+  min-width: 4ch; text-align: right;   /* fixed slot, so figures line up down the column */
 }
 .cell .pt .pv.none{ color: var(--ink-4); }
 
@@ -376,6 +377,7 @@ tr.sep td{ height: 12px; border-bottom: 1px solid var(--rule-2); background: var
   font-family: var(--ffm); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600;
   color: var(--ink); letter-spacing: -0.01em; line-height: 1.2;
   background: var(--pale-neutral); padding: 0 5px; border-radius: 9999px;
+  min-width: 6ch; text-align: right;
 }
 .cell.big .ret .rv{ font-size: 11.5px; }
 .cell .ret .rv.none{ color: var(--ink-4); font-weight: 400; background: transparent; padding: 0; }
@@ -387,7 +389,9 @@ tr.sep td{ height: 12px; border-bottom: 1px solid var(--rule-2); background: var
 }
 .cell .ret .rc b{
   font-family: var(--ffm); font-variant-numeric: tabular-nums; font-size: 9.5px; font-weight: 400; color: var(--ink-3);
+  min-width: 3ch; text-align: right;   /* fixed slots, so figures line up down the column */
 }
+.cell .ret .rc.w5 b{ min-width: 5ch; }
 .cell .ret .rc b.none{ color: var(--ink-4); }
 /* a subset line (e.g. new-to-F&S inside new-to-barber): clearly subordinate, so it
    never reads as another term added into the rate's denominator */
@@ -1794,7 +1798,7 @@ function convHTML(v){
     + '<span class="rv'+(rate==null?' none':'')+'">'+pd(rate)+'</span>'
     + '<span class="rcs">'
     + '<span class="rc"><i>Conv</i><b'+(b==null?' class="none"':'')+'>'+nd(b)+'</b></span>'
-    + '<span class="rc"><i>of</i><b'+(t==null?' class="none"':'')+'>'+nd(t)+'</b></span>'
+    + '<span class="rc w5"><i>of</i><b'+(t==null?' class="none"':'')+'>'+nd(t)+'</b></span>'
     + '</span></span>';
 }
 function signPeso(v){ return (v<0?'−':'+')+'₱'+nfmt(Math.abs(Math.round(v)),0); }
