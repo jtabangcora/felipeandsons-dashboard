@@ -2047,16 +2047,42 @@ function buildGrid(host, cfg){
       /* a trailing average over fewer periods than it claims is a different number
          wearing the same label, so an incomplete window dashes instead */
       const tail = series.slice(-trailN);
-      const avg = (tail.length===trailN && tail.every(x=>x!=null) && !tail.some(x=>Array.isArray(x)))
+      let avg = (tail.length===trailN && tail.every(x=>x!=null) && !tail.some(x=>Array.isArray(x)))
         ? tail.reduce((a,c)=>a+c,0)/tail.length : null;
-      const last = series[series.length-1];
+      let last = series[series.length-1];
       let offTxt='—', offCls='flat';
-      const isRate = (st.show==='share' && r.level>0 && par) || (r.fmt||cfg.fmt)==='pct';
+      let isRate = (st.show==='share' && r.level>0 && par) || (r.fmt||cfg.fmt)==='pct';
+      let avgHTML = null;
+      /* a compound cell (walk-in/booked, retention, conversion) averages its parts: a rate
+         is pooled over the window (Σ top ÷ Σ base), never a mean of weekly rates, and it
+         still dashes unless every period in the window is complete */
+      const cfmt = r.fmt || (cfg.fmtFor ? cfg.fmtFor(st) : null) || cfg.fmt;
+      if(cfmt==='conv' || cfmt==='ret3' || cfmt==='ret4' || cfmt==='duo'){
+        const raws = win.slice(-trailN).map(p=>r.val(p.key));
+        const lv = raws[raws.length-1];
+        const pick = { conv:[0,1], ret3:[1,0], ret4:[2,1], duo:[0,1] }[cfmt];   // [top, other]
+        const ok = raws.length===trailN && raws.every(v=>Array.isArray(v) && v[pick[0]]!=null && v[pick[1]]!=null);
+        const A = ok ? raws.reduce((s,v)=>s+v[pick[0]],0) : 0;
+        const B = ok ? raws.reduce((s,v)=>s+v[pick[1]],0) : 0;
+        const okL = Array.isArray(lv) && lv[pick[0]]!=null && lv[pick[1]]!=null;
+        if(cfmt==='duo'){
+          isRate = false;
+          avg  = ok ? (A+B)/trailN : null;
+          last = okL ? lv[0]+lv[1] : null;
+          avgHTML = ok ? (typeof partsHTML==='function' ? '<span class="cell">'+partsHTML([Math.round(A/trailN), Math.round(B/trailN)])+'</span>' : Math.round(A/trailN)+' / '+Math.round(B/trailN)) : '—';
+        } else {
+          isRate = true;
+          const base = (cfmt==='conv') ? B : A+B;                  // conv: of clients; ret: new + repeat
+          avg  = (ok && base) ? A/base : null;
+          const lb = okL ? ((cfmt==='conv') ? lv[1] : lv[pick[0]]+lv[pick[1]]) : 0;
+          last = (okL && lb) ? lv[pick[0]]/lb : null;
+        }
+      }
       if(avg!=null && last!=null){
         if(isRate){ const d=(last-avg)*100; offCls = Math.abs(d)<0.05?'flat':((d>0)===good?'up':'dn'); offTxt=(d>0?'+':'−')+nfmt(Math.abs(d),1)+' pts'; }
         else if(avg!==0){ const d=(last-avg)/Math.abs(avg)*100; offCls = Math.abs(d)<0.05?'flat':((d>0)===good?'up':'dn'); offTxt=(d>0?'+':'−')+nfmt(Math.abs(d),1)+'%'; }
       }
-      const avgFmt = isRate? F.pct(avg) : F[(r.fmt||cfg.fmt||'peso')](avg);
+      const avgFmt = avgHTML!=null ? avgHTML : isRate? F.pct(avg) : F[(r.fmt||cfg.fmt||'peso')](avg);
       h += '<td class="trail">'+avgFmt+'</td>';
       h += '<td class="trail"><span class="m '+offCls+'" style="font-size:11px">'+offTxt+'</span></td>';
       h += '</tr>';

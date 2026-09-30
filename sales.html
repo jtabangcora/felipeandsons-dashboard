@@ -622,6 +622,25 @@ table.g.inertT td{ height: 32px; }
 }
 .sub-label{ max-width: 92ch; }
 
+/* ---------------- new-to-branch return rate (monthly cohort) ---------------- */
+.ct-block{ flex-basis: 100%; }
+.ct-wrap{ overflow-x: auto; padding: 4px 18px 0; }
+.ctab{ border-collapse: collapse; width: 100%; }
+.ctab th, .ctab td{ padding: 6px 10px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+.ctab thead th{ font-family: var(--ffm); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-4); font-weight: 400; }
+.ctab th.ct-l, .ctab td.ct-l{ text-align: left; }
+.ctab td.ct-l{ font-size: 12.5px; color: var(--ink); }
+.ctab tbody tr:first-child td{ font-weight: 500; }
+.ctab .ct-s, .ctab th.ct-s{ background: var(--now); }
+.ctab .ct-r{ display: inline-block; font-family: var(--ffm); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600;
+  color: var(--ink); background: var(--pale-neutral); padding: 0 5px; border-radius: 9999px; min-width: 6ch; text-align: right; }
+.ctab .ct-c{ display: block; font-family: var(--ffm); font-variant-numeric: tabular-nums; font-size: 8.5px; color: var(--ink-4); margin-top: 1px; }
+.ctab .ct-c i{ font-style: normal; letter-spacing: .04em; margin-left: 5px; }
+.ctab .ct-c b{ font-weight: 400; color: var(--ink-3); }
+.ctab td.ct-n{ color: var(--ink-4); }
+.ctab td.ct-p .ct-r{ background: transparent; color: var(--ink-3); font-weight: 400; font-style: italic; }
+.ctab th.ct-p{ color: var(--ink-3); font-style: italic; }
+
 /* ---------------- title ----------------
    The wordmark is a heavy grotesque, uppercase and set tight. The title speaks the
    same way: stacked, set solid, no italic and no flourish. Weight is the whole idea,
@@ -2042,16 +2061,42 @@ function buildGrid(host, cfg){
       /* a trailing average over fewer periods than it claims is a different number
          wearing the same label, so an incomplete window dashes instead */
       const tail = series.slice(-trailN);
-      const avg = (tail.length===trailN && tail.every(x=>x!=null) && !tail.some(x=>Array.isArray(x)))
+      let avg = (tail.length===trailN && tail.every(x=>x!=null) && !tail.some(x=>Array.isArray(x)))
         ? tail.reduce((a,c)=>a+c,0)/tail.length : null;
-      const last = series[series.length-1];
+      let last = series[series.length-1];
       let offTxt='—', offCls='flat';
-      const isRate = (st.show==='share' && r.level>0 && par) || (r.fmt||cfg.fmt)==='pct';
+      let isRate = (st.show==='share' && r.level>0 && par) || (r.fmt||cfg.fmt)==='pct';
+      let avgHTML = null;
+      /* a compound cell (walk-in/booked, retention, conversion) averages its parts: a rate
+         is pooled over the window (Σ top ÷ Σ base), never a mean of weekly rates, and it
+         still dashes unless every period in the window is complete */
+      const cfmt = r.fmt || (cfg.fmtFor ? cfg.fmtFor(st) : null) || cfg.fmt;
+      if(cfmt==='conv' || cfmt==='ret3' || cfmt==='ret4' || cfmt==='duo'){
+        const raws = win.slice(-trailN).map(p=>r.val(p.key));
+        const lv = raws[raws.length-1];
+        const pick = { conv:[0,1], ret3:[1,0], ret4:[2,1], duo:[0,1] }[cfmt];   // [top, other]
+        const ok = raws.length===trailN && raws.every(v=>Array.isArray(v) && v[pick[0]]!=null && v[pick[1]]!=null);
+        const A = ok ? raws.reduce((s,v)=>s+v[pick[0]],0) : 0;
+        const B = ok ? raws.reduce((s,v)=>s+v[pick[1]],0) : 0;
+        const okL = Array.isArray(lv) && lv[pick[0]]!=null && lv[pick[1]]!=null;
+        if(cfmt==='duo'){
+          isRate = false;
+          avg  = ok ? (A+B)/trailN : null;
+          last = okL ? lv[0]+lv[1] : null;
+          avgHTML = ok ? '<span class="cell">'+partsHTML([Math.round(A/trailN), Math.round(B/trailN)])+'</span>' : '—';
+        } else {
+          isRate = true;
+          const base = (cfmt==='conv') ? B : A+B;                  // conv: of clients; ret: new + repeat
+          avg  = (ok && base) ? A/base : null;
+          const lb = okL ? ((cfmt==='conv') ? lv[1] : lv[pick[0]]+lv[pick[1]]) : 0;
+          last = (okL && lb) ? lv[pick[0]]/lb : null;
+        }
+      }
       if(avg!=null && last!=null){
         if(isRate){ const d=(last-avg)*100; offCls = Math.abs(d)<0.05?'flat':((d>0)===good?'up':'dn'); offTxt=(d>0?'+':'−')+nfmt(Math.abs(d),1)+' pts'; }
         else if(avg!==0){ const d=(last-avg)/Math.abs(avg)*100; offCls = Math.abs(d)<0.05?'flat':((d>0)===good?'up':'dn'); offTxt=(d>0?'+':'−')+nfmt(Math.abs(d),1)+'%'; }
       }
-      const avgFmt = isRate? F.pct(avg) : F[(r.fmt||cfg.fmt||'peso')](avg);
+      const avgFmt = avgHTML!=null ? avgHTML : isRate? F.pct(avg) : F[(r.fmt||cfg.fmt||'peso')](avg);
       h += '<td class="trail">'+avgFmt+'</td>';
       h += '<td class="trail"><span class="m '+offCls+'" style="font-size:11px">'+offTxt+'</span></td>';
       h += '</tr>';
@@ -2741,12 +2786,59 @@ const UH = document.getElementById('unit-haberdashery');
       + '</div>';
   }
 
+  /* New to Branch Return Rate — the monthly branch score. Each month's brand-new-to-branch
+     customers are a cohort; the score is the share who came back to that branch by the
+     end of the month after next (July → by 30 Sep). The same cohort is re-checked at every
+     month end since, and the latest check is its lifetime rate. Not week-driven. */
+  const MON3 = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const mlab = m => MON3[parseInt(m.slice(5,7),10)-1] + " '" + m.slice(2,4);
+  const dlab = d => parseInt(d.slice(8,10),10) + ' ' + MON3[parseInt(d.slice(5,7),10)-1];
+  function lifeFor(co, node, m){
+    const o = co.life && co.life[node] && co.life[node][m];
+    if(!o) return null;
+    const k = Object.keys(o).sort().pop();
+    return k ? o[k] : null;
+  }
+  function cohortTable(){
+    const co = REAL.cohort;
+    if(!co || !co.months || !co.months.length) return '';
+    const mt = co.matureThrough || '';
+    const hasLife = !!(co.life && Object.keys(co.life).length);
+    const cell = (node,m)=>{
+      const d = co.rows[node] && co.rows[node][m];
+      const cls = (m > mt ? 'ct-p ' : '') + (m === mt ? 'ct-s' : '');
+      if(!d || !d.c) return '<td class="ct-n '+cls+'">—</td>';
+      const lr = lifeFor(co, node, m);
+      return '<td class="'+cls+'"><span class="ct-r">'+F.pct(d.r/d.c)+'</span>'
+           + '<span class="ct-c">'+nd(d.r)+'/'+nd(d.c)
+           + (hasLife ? '<i>LIFE</i> <b>'+(lr==null ? '—' : F.pct(lr/d.c))+'</b>' : '')
+           + '</span></td>';
+    };
+    const rowFor = (node,name)=> '<tr><td class="ct-l">'+name+'</td>'
+      + co.months.map(m=>cell(node,m)).join('')+'</tr>';
+    const lt = co.lifeThrough;
+    return '<div class="rblock ct-block">'
+      + '<h3>New to Branch Return Rate<span class="w">monthly cohort · came back by end of M+2</span></h3>'
+      + '<div class="ct-wrap"><table class="ctab"><thead><tr><th class="ct-l">Branch</th>'
+      + co.months.map(m=>'<th class="'+(m>mt?'ct-p ':'')+(m===mt?'ct-s':'')+'">'+mlab(m)+(m===mt?' · score':'')+'</th>').join('')
+      + '</tr></thead><tbody>'
+      + rowFor('ALL','All branches')
+      + BRANCHES.map(b=>rowFor(b.code,b.name)).join('')
+      + '</tbody></table></div>'
+      + '<div class="rb-note">Each month is the branch’s brand-new customers that month. The rate is the share who came back to the branch by the end of the month after next (Jul → by 30 Sep); '
+      + '<b>'+(mt?mlab(mt):'—')+'</b> is the latest cohort whose window has closed, so it is the current score. Later months are provisional. '
+      + (hasLife ? '<b>Life</b> is the same cohort re-checked at the latest month end'+(lt ? ' (data to '+dlab(lt)+')' : '')+'. ' : 'The lifetime re-check at each month end is not live yet. ')
+      + 'Attended, phone-identified Yodel visits only.</div>'
+      + '</div>';
+  }
+
   function paint(){
     const p = WEEKS.filter(w=>w.key===PERIOD.W.end)[0];
     host.innerHTML =
-        block('All branches', 'ALL', 'counted once each')
+        cohortTable()
+      + block('All branches', 'ALL', 'counted once each')
       + BRANCHES.map(b=>block(b.name, b.code, '')).join('');
-    lbl.textContent = 'Lifetime to ' + (p ? p.label.split('–').pop().trim() + ' ' + p.sub : 'the selected week');
+    lbl.textContent = 'Monthly score by cohort · lifetime blocks to ' + (p ? p.label.split('–').pop().trim() + ' ' + p.sub : 'the selected week');
   }
   const lbl = document.createElement('div');
   lbl.className = 'sub-label'; lbl.style.marginTop = '0';
