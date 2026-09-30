@@ -623,7 +623,7 @@ table.g.inertT td{ height: 32px; }
 .sub-label{ max-width: 92ch; }
 
 /* ---------------- new-to-branch return rate (monthly cohort) ---------------- */
-.ct-block{ flex-basis: 100%; }
+.co-host{ margin-bottom: 8px; }
 .ct-wrap{ overflow-x: auto; padding: 4px 18px 0; }
 .ctab{ border-collapse: collapse; width: 100%; }
 .ctab th, .ctab td{ padding: 6px 10px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
@@ -2834,15 +2834,21 @@ const UH = document.getElementById('unit-haberdashery');
 
   function paint(){
     const p = WEEKS.filter(w=>w.key===PERIOD.W.end)[0];
+    coHost.innerHTML = cohortTable();
     host.innerHTML =
-        cohortTable()
-      + block('All branches', 'ALL', 'counted once each')
+        block('All branches', 'ALL', 'counted once each')
       + BRANCHES.map(b=>block(b.name, b.code, '')).join('');
-    lbl.textContent = 'Monthly score by cohort · lifetime blocks to ' + (p ? p.label.split('–').pop().trim() + ' ' + p.sub : 'the selected week');
+    lbl.textContent = 'Lifetime overall · to ' + (p ? p.label.split('–').pop().trim() + ' ' + p.sub : 'the selected week');
   }
+  /* the monthly score stands on its own, above and apart from the lifetime blocks */
+  const coLbl = document.createElement('div');
+  coLbl.className = 'sub-label'; coLbl.style.marginTop = '0';
+  coLbl.textContent = 'New to Branch Return Rate · monthly score';
+  const coHost = document.createElement('div');
+  coHost.className = 'co-host';
   const lbl = document.createElement('div');
-  lbl.className = 'sub-label'; lbl.style.marginTop = '0';
-  el.insertBefore(lbl, host);
+  lbl.className = 'sub-label';
+  el.insertBefore(coLbl, host); el.insertBefore(coHost, host); el.insertBefore(lbl, host);
 
   paint();
   onPeriodChange(function(axis){ if(axis==='W') paint(); });
