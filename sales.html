@@ -624,21 +624,27 @@ table.g.inertT td{ height: 32px; }
 
 /* ---------------- new-to-branch return rate (monthly cohort) ---------------- */
 .co-host{ margin-bottom: 8px; }
-.ct-wrap{ overflow-x: auto; padding: 4px 18px 0; }
+.ct-wrap{ overflow-x: auto; padding: 4px 12px 0; }
 .ctab{ border-collapse: collapse; width: 100%; }
-.ctab th, .ctab td{ padding: 6px 10px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+.ctab th, .ctab td{ padding: 6px 5px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
 .ctab thead th{ font-family: var(--ffm); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-4); font-weight: 400; }
 .ctab th.ct-l, .ctab td.ct-l{ text-align: left; }
 .ctab td.ct-l{ font-size: 12.5px; color: var(--ink); }
 .ctab tbody tr:first-child td{ font-weight: 500; }
 .ctab .ct-s, .ctab th.ct-s{ background: var(--now); }
+/* two rates, same weight, each with its own micro-label; the trackable base under them */
+.ctab .ct-pair{ display: flex; justify-content: flex-end; align-items: baseline; gap: 4px; }
+.ctab .ct-k{ font-family: var(--ffm); font-size: 7.5px; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-4); margin-right: 1px; }
 .ctab .ct-r{ display: inline-block; font-family: var(--ffm); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600;
-  color: var(--ink); background: var(--pale-neutral); padding: 0 5px; border-radius: 9999px; min-width: 6ch; text-align: right; }
-.ctab .ct-c{ display: block; font-family: var(--ffm); font-variant-numeric: tabular-nums; font-size: 8.5px; color: var(--ink-4); margin-top: 1px; }
-.ctab .ct-c i{ font-style: normal; letter-spacing: .04em; margin-left: 5px; }
-.ctab .ct-c b{ font-weight: 400; color: var(--ink-3); }
+  color: var(--ink); background: var(--pale-neutral); padding: 0 4px; border-radius: 9999px; width: 50px; box-sizing: border-box; text-align: right; }
+/* the 2-mo / life labels ride in the column head, one over each rate, so the cells stay two numbers wide */
+.ctab .ct-hk{ display: flex; justify-content: flex-end; gap: 4px; margin-top: 3px; }
+.ctab .ct-hk i{ font-style: normal; width: 50px; text-align: right; font-size: 7.5px; letter-spacing: .06em; color: var(--ink-4); padding-right: 4px; box-sizing: border-box; }
+.ctab .ct-c{ display: block; font-family: var(--ffm); font-variant-numeric: tabular-nums; font-size: 8.5px; color: var(--ink-4); margin-top: 2px; }
 .ctab td.ct-n{ color: var(--ink-4); }
 .ctab td.ct-p .ct-r{ background: transparent; color: var(--ink-3); font-weight: 400; font-style: italic; }
+.ct-legend{ padding: 10px 18px 2px; font-family: var(--ffm); font-size: 9px; letter-spacing: .04em; color: var(--ink-3); display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.ct-legend b{ color: var(--ink); font-weight: 600; text-transform: uppercase; letter-spacing: .06em; margin-right: 4px; }
 .ctab th.ct-p{ color: var(--ink-3); font-style: italic; }
 
 /* ---------------- title ----------------
@@ -2750,7 +2756,7 @@ const UH = document.getElementById('unit-haberdashery');
    and a standing picture is a block, not a row of periods. */
 (function(){
   const el = section(UB, { id:'m-retention', n:'05', title:'Retention',
-    src:'YBE · lifetime to the end of the selected week',
+    src:'YBE · monthly cohort score · lifetime to the selected week',
     extra:'<div class="blocks" data-blocks></div>' });
   el.querySelector('[data-grid]').remove();
   const host = el.querySelector('[data-blocks]');
@@ -2809,26 +2815,30 @@ const UH = document.getElementById('unit-haberdashery');
       const cls = (m > mt ? 'ct-p ' : '') + (m === mt ? 'ct-s' : '');
       if(!d || !d.c) return '<td class="ct-n '+cls+'">—</td>';
       const lr = lifeFor(co, node, m);
-      return '<td class="'+cls+'"><span class="ct-r">'+F.pct(d.r/d.c)+'</span>'
-           + '<span class="ct-c">'+nd(d.r)+'/'+nd(d.c)
-           + (hasLife ? '<i>LIFE</i> <b>'+(lr==null ? '—' : F.pct(lr/d.c))+'</b>' : '')
-           + '</span></td>';
+      return '<td class="'+cls+'"><span class="ct-pair">'
+           + '<span class="ct-r" title="2-month return rate">'+F.pct(d.r/d.c)+'</span>'
+           + (hasLife ? '<span class="ct-r" title="Lifetime return rate">'+(lr==null ? '—' : F.pct(lr/d.c))+'</span>' : '')
+           + '</span><span class="ct-c">of '+nd(d.c)+' trackable</span></td>';
     };
     const rowFor = (node,name)=> '<tr><td class="ct-l">'+name+'</td>'
       + co.months.map(m=>cell(node,m)).join('')+'</tr>';
     const lt = co.lifeThrough;
     return '<div class="rblock ct-block">'
-      + '<h3>New to Branch Return Rate<span class="w">monthly cohort · came back by end of M+2</span></h3>'
+      + '<h3>New to Branch Return Rate<span class="w">by the month they first came in</span></h3>'
+      + '<div class="ct-legend">'
+      +   '<span><b>2-mo</b>came back by the end of the month after next (Jul → 30 Sep)</span>'
+      +   (hasLife ? '<span><b>Life</b>came back at any time up to the latest month end</span>' : '')
+      +   '<span><b>Trackable</b>new clients with a phone on Yodel, not all clients served</span>'
+      + '</div>'
       + '<div class="ct-wrap"><table class="ctab"><thead><tr><th class="ct-l">Branch</th>'
-      + co.months.map(m=>'<th class="'+(m>mt?'ct-p ':'')+(m===mt?'ct-s':'')+'">'+mlab(m)+(m===mt?' · score':'')+'</th>').join('')
+      + co.months.map(m=>'<th class="'+(m>mt?'ct-p ':'')+(m===mt?'ct-s':'')+'">'+mlab(m)+(m===mt?' · score':'')+'<span class="ct-hk"><i>2-mo</i>'+(hasLife?'<i>Life</i>':'')+'</span></th>').join('')
       + '</tr></thead><tbody>'
       + rowFor('ALL','All branches')
       + BRANCHES.map(b=>rowFor(b.code,b.name)).join('')
       + '</tbody></table></div>'
-      + '<div class="rb-note">Each month is the branch’s brand-new customers that month. The rate is the share who came back to the branch by the end of the month after next (Jul → by 30 Sep); '
-      + '<b>'+(mt?mlab(mt):'—')+'</b> is the latest cohort whose window has closed, so it is the current score. Later months are provisional. '
-      + (hasLife ? '<b>Life</b> is the same cohort re-checked at the latest month end'+(lt ? ' (data to '+dlab(lt)+')' : '')+'. ' : 'The lifetime re-check at each month end is not live yet. ')
-      + 'Attended, phone-identified Yodel visits only.</div>'
+      + '<div class="rb-note"><b>'+(mt?mlab(mt):'—')+'</b> is the latest month whose 2-month window has closed, so it is the current score; later months are still filling. '
+      + (hasLife ? 'Life is re-checked every month end'+(lt ? ' (data to '+dlab(lt)+')' : '')+', so it only rises. ' : '')
+      + 'Trackable clients are the ones we can recognise when they come back: a Yodel booking with a phone number. Walk-ins with no number and anything outside Yodel are left out, so the base is smaller than total clients served on the daily form.</div>'
       + '</div>';
   }
 
@@ -2843,7 +2853,7 @@ const UH = document.getElementById('unit-haberdashery');
   /* the monthly score stands on its own, above and apart from the lifetime blocks */
   const coLbl = document.createElement('div');
   coLbl.className = 'sub-label'; coLbl.style.marginTop = '0';
-  coLbl.textContent = 'New to Branch Return Rate · monthly score';
+  coLbl.textContent = 'Monthly score';
   const coHost = document.createElement('div');
   coHost.className = 'co-host';
   const lbl = document.createElement('div');
