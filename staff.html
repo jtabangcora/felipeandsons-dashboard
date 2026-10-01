@@ -737,15 +737,17 @@ const CFG = {
    items: PILLARS.map(p=>({group:p[0], items:p[3]})),
    cols: v => {
      const unit = v==='total' ? '/35' : v==='know' ? '/5' : PILLARS.some(p=>p[1]===v) ? '/'+PILLARS.find(p=>p[1]===v)[2] : '/5';
-     const preSub = v==='total' ? '/100 · old rubric' : v==='tech' ? '/25 · old rubric' : '/5 · old rubric';
+     const preSub = '% · old rubric';
      return [{k:'A1',l:'A1',sub:preSub,pre:true},{k:'A2',l:'A2',sub:preSub,pre:true,lastpre:true}].concat(monthCols(unit));
    },
    val: (n,v,k) => {
      if(k!=='A1' && k!=='A2') return null;
      const a = DATA.bma[n] && DATA.bma[n][k]; if(!a) return null;
-     if(v==='total') return {v:a.total, txt:f1(a.total), sub: a.raw+' of '+(a.n*5)+(a.n<15?' · '+a.n+'/15 scored':'')};
-     if(v==='tech') return a.tech==null?null:{v:a.tech, txt:f1(a.tech)};
-     if(OLD_ITEMS.has(v) && a[v]!=null) return {v:a[v], txt:f1(a[v])};
+     /* old-rubric scores read as a percentage of the maximum: total is already out of 100,
+        the Technical pillar is out of 25, a single item out of 5 */
+     if(v==='total') return {v:a.total, txt:f1(a.total)+'%', sub: a.n<15 ? a.n+'/15 scored' : ''};
+     if(v==='tech') return a.tech==null?null:{v:a.tech/25*100, txt:f1(a.tech/25*100)+'%'};
+     if(OLD_ITEMS.has(v) && a[v]!=null) return {v:a[v]/5*100, txt:f1(a[v]/5*100)+'%'};
      return null;
    },
    why: (v,k) => (k==='A1'||k==='A2') ? 'No old-rubric score, or no exact match to this BMA item' : 'BMA not yet run for this month' },
