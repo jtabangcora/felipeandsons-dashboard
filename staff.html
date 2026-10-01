@@ -694,6 +694,8 @@ async function loadREAL(){
     const end=(Array.isArray(weeks)&&weeks.length)?weeks[0]:null;
     if(!end) throw new Error('no complete weeks available');
     real=await rpc('dash_team_full',{p_end:end,p_n:38});
+    /* FOH contact capture is its own call: if it fails, the rest of the page still stands */
+    try{ real.fohcc = await rpc('dash_foh_capture',{}); }catch(_){ real.fohcc = {}; }
   }catch(e){
     load.style.color='var(--ink-2,#4A4945)';
     load.innerHTML='<b>Could not read live data.</b> '+String((e&&e.message)||e).replace(/[<>]/g,'')
@@ -726,7 +728,22 @@ const PILLARS = [
 const OLD_ITEMS = new Set(['t_sec','t_sci','t_clip','t_fin','t_sty','c_hair','s_greet','s_hand','s_final']);
 const WEEKS = Array.from({length:36},(_,i)=>{ const e=new Date(Date.UTC(2026,0,4+7*i)); return {i, l: e.getUTCDate()+' '+['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][e.getUTCMonth()]}; });
 const ATTR_FROM = 31; /* week index of 3–9 Aug */
-const monthCols = sub => MONTHS.map(m=>({k:m.k, l:m.l, sub: m.k==='09' ? 'MTD · to 6 Sep' : sub, now: m.k==='09'}));
+/* roster name → the name the DOR's FOH-on-duty field resolves to (vw_dor_foh) */
+const FOH_ALIAS = { 'Justin Bernal':'Justin Paulo Bernal', 'Ann Jeah Landroma':'Ann Jeah Ladroma', 'RoseMarie Abenoja':'RM Abenoja',
+                    'Jhasmine Kaye Lim':'Jhasmine Lim', 'Louella Marie Huang':'Louella Huang' };
+/* FOH capture weeks: Monday to Sunday, keyed by the Sunday, from the first week any FOH has a figure to the latest */
+function fohWeeks(){
+  const keys = [];
+  Object.values(DATA.fohcc||{}).forEach(o=>Object.keys(o).forEach(k=>keys.push(k)));
+  if(!keys.length) return [];
+  keys.sort();
+  const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const out = [], last = new Date(keys[keys.length-1]+'T00:00:00Z');
+  for(let d=new Date(keys[0]+'T00:00:00Z'); d<=last; d.setUTCDate(d.getUTCDate()+7))
+    out.push({ k: d.toISOString().slice(0,10), l: d.getUTCDate()+' '+MON[d.getUTCMonth()] });
+  return out;
+}
+const monthCols = sub =>MONTHS.map(m=>({k:m.k, l:m.l, sub: m.k==='09' ? 'MTD · to 6 Sep' : sub, now: m.k==='09'}));
 
 const CFG = {
  total: { host:'g-total', rows:'barbers', views:[{id:'total',label:'Total'}],
@@ -787,16 +804,24 @@ const CFG = {
      return { v: r/c*100, txt: f1(r/c*100)+'%', sub: (n<kids.length ? n+' of '+kids.length+' barbers · ' : '')+Math.round(c).toLocaleString('en-PH')+' clients' };
    } },
 
- foh: { host:'g-foh', rows:'foh',
+ /* Contact Capture: each day an FOH is on duty (DOR) takes that branch-day's capture rate
+    (attended Yodel visits with a phone ÷ attended visits); the week is the average of
+    those days. Other FOH metrics still have no source. */
+ foh: { host:'g-foh', rows:'foh', defaultView:'cc', scrollEnd: v => v==='cc',
    views:[{id:'total',label:'Total'},{id:'cc',label:'Contact Capture'},{id:'tm',label:'Transaction Match'},{id:'tag',label:'Customer Tagging'},{id:'err',label:'Reporting Errors'}],
-   cols: v => monthCols(v==='total'?'/100':'/25'), val: ()=>null,
-   why: v => ({total:'None of the four metrics can be credited to an FOH yet', cc:'DOR has no FOH-on-duty field to credit the day to', tm:'ESD name + number parsing not live', tag:'ESD tag parsing not live', err:'Error log not in Supabase'}[v]) }
+   cols: v => v==='cc' ? fohWeeks().map((w,i,a)=>({k:w.k, l:w.l, sub:'w/e · avg daily %', now:i===a.length-1})) : monthCols(v==='total'?'/100':'/25'),
+   val: (n,v,k) => {
+     if(v!=='cc') return null;
+     const o = DATA.fohcc && DATA.fohcc[FOH_ALIAS[n] || n]; const x = o && o[k];
+     return x ? {v:x[0], txt:f1(x[0])+'%', sub:x[1]+' day'+(x[1]===1?'':'s')+' on duty'} : null;
+   },
+   why: v => ({total:'Only Contact Capture can be credited to an FOH so far', cc:'Not on duty that week per the DOR, or no Yodel visits on those days', tm:'ESD name + number parsing not live', tag:'ESD tag parsing not live', err:'Error log not in Supabase'}[v]) }
 };
 
 /* ---------- grid ---------- */
 function makeGrid(cfg){
   const host = document.getElementById(cfg.host);
-  const st = { view: cfg.views[0].id, sort: null, open: new Set() };
+  const st = { view: cfg.defaultView || cfg.views[0].id, sort: null, open: new Set() };
   const ctl = document.createElement('div'); ctl.className='controls';
   const frame = document.createElement('div'); frame.className='gridframe';
   const wrap = document.createElement('div'); wrap.className='gridwrap'; frame.appendChild(wrap);
@@ -870,7 +895,9 @@ function makeGrid(cfg){
       people.sort(cmp).forEach(p=>{ h += '<tr class="r lv1">'+nameCell(p)+cols.map(c=>cell(V(p.n,c.k),c)).join('')+'</tr>'; });
     }
     wrap.innerHTML = h + '</tbody></table>';
-    if(cfg.scrollEnd && !st.scrolled){ wrap.scrollLeft = wrap.scrollWidth; st.scrolled = true; }
+    /* a weekly view opens on its latest weeks, once per view */
+    const se = typeof cfg.scrollEnd==='function' ? cfg.scrollEnd(st.view) : cfg.scrollEnd;
+    if(se && !st['sc_'+st.view]){ wrap.scrollLeft = wrap.scrollWidth; st['sc_'+st.view] = true; }
   }
   render();
 }
@@ -912,7 +939,8 @@ Object.values(CFG).forEach(makeGrid);
     ['Mhel John Trimor','Weeks from 3 Aug','Active on the roster but has no kept YBE bookings after the week ending 2 Aug.'],
     ['Retention · New Client Return Rate','Jul, Aug, Sep','The return window has not closed as at 6 Sep. Windows are the Q3 figures (BGC 52, LEV / PPM 54, POD 56, EROD 57 days) and apply to every cohort. A client\'s window is set by the branch of their first visit, and a return is a later kept booking with the same barber at any branch.'],
     ['Retention · Lifetime','Rule applied','Of every phone number the barber has ever served (YBE back to 2017), the share with 2 or more kept visits with him, as at month end.'],
-    ['Front of House','Every figure','DOR has no FOH-on-duty field, so a day cannot be credited to anyone. Transaction Match and Tagging need ESD parsing, which is not live. The Reporting Errors log is not in Supabase.']
+    ['Front of House · Contact Capture','Rule applied','Credited by the DOR FOH-on-duty field (from 13 Apr). Each day on duty takes that branch-day\'s capture rate: attended Yodel visits with a phone number ÷ attended visits. The week is the plain average of those daily rates. When two FOH share a day, both get it. Jane Ortega and Jessa Mae Sua-an appear on the DOR but not on the FOH roster, so they are not shown.'],
+    ['Front of House · other metrics','Every figure','Transaction Match and Tagging need ESD parsing, which is not live. The Reporting Errors log is not in Supabase. The FOH Total waits on all four.']
   ];
   document.getElementById('gaps-tbl').innerHTML = '<thead><tr><th>#</th><th>Where</th><th>Scope</th><th>Why</th></tr></thead><tbody>'
     + G.map((g,i)=>'<tr><td class="n">'+String(i+1).padStart(2,'0')+'</td><td class="t">'+esc(g[0])+'</td><td class="o">'+esc(g[1])+'</td><td>'+esc(g[2])+'</td></tr>').join('') + '</tbody>';
