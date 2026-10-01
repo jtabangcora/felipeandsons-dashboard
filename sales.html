@@ -1969,6 +1969,8 @@ function buildGrid(host, cfg){
     /* multi-part cells name each figure; movement and share do not apply to a run
        of counts, so they render and return before that logic. retention leads with
        its rate; the walk-in/booked pair reads as a labelled stack. */
+    /* a row may draw its own cell (a share over the counts behind it) */
+    if(r.cellHTML && st.mode!=='movement' && st.show!=='share') return { html: r.cellHTML(p.key), editable:false };
     if(fmt==='duo' || fmt==='ret3' || fmt==='ret4' || fmt==='conv'){
       if(st.mode==='movement') return { html:'<span class="v mv flat">—</span>', editable:false };
       const raw = r.val(p.key);
@@ -2740,20 +2742,19 @@ const UH = document.getElementById('unit-haberdashery');
     const notTagging = code=>{ const n=REAL.source&&REAL.source[code]; const ks=n?Object.keys(n):[]; const last=ks.sort().pop();
                                return !!(last && !SRC_CATS.some(c=>n[last][c[0]])); };
     const smp = code=>pk=>{ const t=tagged(pk,code), c=served(pk,code); return (t!=null && c) ? t/c : null; };
-    /* top: sampling — the total on the parent row, each branch's rate under it, and that
-       branch's answers under the branch. Below: the answers as all-branch counts. */
-    const rows = [{ id:'ALL', name:'Where they came from · sampling', level:0, derived:true, tag:'till', fmt:'pct', movement:'pp',
-      val: smp('ALL'),
+    /* a share with the counts behind it: "45.0%" over "35 of 78" */
+    const shareCell = (n,d)=> (n==null || !d) ? '<span class="v none">—</span>'
+      : '<span class="v">'+F.pct(n/d)+'</span><span class="m flat">'+nd(n)+' of '+nd(d)+'</span>';
+    /* sampling on top (the total, then each branch); under each branch, its answers as a
+       share of that branch's tagged customers. Weekly traffic per branch is the point. */
+    return [{ id:'ALL', name:'Where they came from · sampling', level:0, derived:true, tag:'till', fmt:'pct', movement:'pp',
+      val: smp('ALL'), cellHTML: pk=>shareCell(tagged(pk,'ALL'), served(pk,'ALL')),
       children: BRANCHES.map(b=>({ id:'src-b'+b.code, name:b.name, level:1, derived:true, fmt:'pct', movement:'pp',
         tag: notTagging(b.code) ? 'not tagging' : '', val: smp(b.code),
-        children: SRC_CATS.map(([cat,label])=>({ id:'src-b'+b.code+cat, name:label, level:2, fmt:'int', movement:'count',
-          val: pk=>srcWeek(pk,b.code,cat) })) })) }];
-    rows.push({sep:true,id:'src-s'});
-    SRC_CATS.forEach(([cat,label])=>rows.push({ id:'src-'+cat, name:label, level:0, fmt:'int', movement:'count',
-      val: pk=>srcWeek(pk,'ALL',cat),
-      children: BRANCHES.map(b=>({ id:'src-'+cat+b.code, name:b.name, level:1, fmt:'int', movement:'count',
-        tag: notTagging(b.code) ? 'not tagging' : '', val: pk=>srcWeek(pk,b.code,cat) })) }));
-    return rows;
+        cellHTML: pk=>shareCell(tagged(pk,b.code), served(pk,b.code)),
+        children: SRC_CATS.map(([cat,label])=>({ id:'src-b'+b.code+cat, name:label, level:2, derived:true, fmt:'pct', movement:'pp',
+          val: pk=>{ const n=srcWeek(pk,b.code,cat), t=tagged(pk,b.code); return (n!=null && t) ? n/t : null; },
+          cellHTML: pk=>shareCell(srcWeek(pk,b.code,cat), tagged(pk,b.code)) })) })) }];
   }
   const HEADS = {
     totals:    'Foot traffic · branch from the daily form, barbers from Yodel',
