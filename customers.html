@@ -2650,14 +2650,21 @@ const UB = document.getElementById('unit-barbershop');
     const served = (pk, code)=> code==='ALL' ? sumBranches('clients',pk) : get('clients',pk,code);
     const notTagging = code=>{ const n=REAL.source&&REAL.source[code]; const ks=n?Object.keys(n):[]; const last=ks.sort().pop();
                                return !!(last && !SRC_CATS.some(c=>n[last][c[0]])); };
-    /* one parent row: its figure is the total sampling rate; the answers sit under it */
-    return [{ id:'ALL', name:'Where they came from · sampling', level:0, derived:true, tag:'till', fmt:'pct', movement:'pp',
-      val: pk=>{ const t=tagged(pk,'ALL'), c=served(pk,'ALL'); return (t!=null && c) ? t/c : null; },
-      children: SRC_CATS.map(([cat,label])=>({ id:'src-'+cat, name:label, level:1, fmt:'int', movement:'count',
-        val: pk=>srcWeek(pk,'ALL',cat),
-        children: BRANCHES.map(b=>({ id:'src-'+cat+b.code, name:b.name, level:2, fmt:'int', movement:'count',
-          tag: notTagging(b.code) ? 'not tagging' : '',
+    const smp = code=>pk=>{ const t=tagged(pk,code), c=served(pk,code); return (t!=null && c) ? t/c : null; };
+    /* top: sampling — the total on the parent row, each branch's rate under it, and that
+       branch's answers under the branch. Below: the answers as all-branch counts. */
+    const rows = [{ id:'ALL', name:'Where they came from · sampling', level:0, derived:true, tag:'till', fmt:'pct', movement:'pp',
+      val: smp('ALL'),
+      children: BRANCHES.map(b=>({ id:'src-b'+b.code, name:b.name, level:1, derived:true, fmt:'pct', movement:'pp',
+        tag: notTagging(b.code) ? 'not tagging' : '', val: smp(b.code),
+        children: SRC_CATS.map(([cat,label])=>({ id:'src-b'+b.code+cat, name:label, level:2, fmt:'int', movement:'count',
           val: pk=>srcWeek(pk,b.code,cat) })) })) }];
+    rows.push({sep:true,id:'src-s'});
+    SRC_CATS.forEach(([cat,label])=>rows.push({ id:'src-'+cat, name:label, level:0, fmt:'int', movement:'count',
+      val: pk=>srcWeek(pk,'ALL',cat),
+      children: BRANCHES.map(b=>({ id:'src-'+cat+b.code, name:b.name, level:1, fmt:'int', movement:'count',
+        tag: notTagging(b.code) ? 'not tagging' : '', val: pk=>srcWeek(pk,b.code,cat) })) }));
+    return rows;
   }
   const HEADS = {
     totals:    'Foot traffic · branch from the daily form, barbers from Yodel',
