@@ -770,7 +770,17 @@ const CFG = {
      if(v==='life'){ const i=+k-1; return r.l[i]==null?null:{v:r.l[i], txt:f1(r.l[i])+'%', sub:r.lc[i].toLocaleString('en-PH')+' clients'}; }
      const x = r.c && r.c[k]; return x ? {v:x[2], txt:f1(x[2])+'%', sub:x[1]+' of '+x[0]} : null;
    },
-   why: (v,k) => v==='nrr' && +k>=7 ? 'Return window not yet closed as at 6 Sep' : 'No clients with this barber yet, or no name map' },
+   why: (v,k) => v==='nrr' && +k>=7 ? 'Return window not yet closed as at 6 Sep' : 'No clients with this barber yet, or no name map',
+   /* branch row: pooled over the barbers who have a figure (returned ÷ clients), not an
+      average that dashes the moment one barber has no name map or no clients yet */
+   pool: (kids,v,k) => {
+     let r=0, c=0, n=0;
+     kids.forEach(p=>{ const x = DATA.ret[p.n]; if(!x) return;
+       if(v==='life'){ const i=+k-1; if(x.l[i]==null || !x.lc[i]) return; r += x.l[i]/100*x.lc[i]; c += x.lc[i]; n++; }
+       else { const y = x.c && x.c[k]; if(!y || !y[0]) return; r += y[1]; c += y[0]; n++; } });
+     if(!c) return null;
+     return { v: r/c*100, txt: f1(r/c*100)+'%', sub: (n<kids.length ? n+' of '+kids.length+' barbers · ' : '')+Math.round(c).toLocaleString('en-PH')+' clients' };
+   } },
 
  foh: { host:'g-foh', rows:'foh',
    views:[{id:'total',label:'Total'},{id:'cc',label:'Contact Capture'},{id:'tm',label:'Transaction Match'},{id:'tag',label:'Customer Tagging'},{id:'err',label:'Reporting Errors'}],
@@ -840,6 +850,7 @@ function makeGrid(cfg){
         const open = st.open.has(code);
         h += '<tr class="r lv0"><td class="lbl"><span class="rowname"><button class="tw" data-tog="'+code+'" aria-expanded="'+open+'">'+(open?'−':'+')+'</button><span class="nm">'+label+'</span><span class="tagx">'+kids.length+' barbers</span></span></td>';
         cols.forEach(c=>{
+          if(cfg.pool){ h += cell(cfg.pool(kids, st.view, c.k), c); return; }
           const vs = kids.map(p=>V(p.n,c.k));
           const all = vs.length && vs.every(Boolean);
           if(!all){ h += '<td class="'+(c.pre?'pre ':'')+(c.lastpre?'lastpre ':'')+(c.now?'now':'')+'" title="Branch average shown only when every barber has a figure"><span class="cell"><span class="v none">—</span></span></td>'; return; }
