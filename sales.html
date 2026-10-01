@@ -2723,16 +2723,38 @@ const UH = document.getElementById('unit-haberdashery');
           val: pk=>retBranchCell(pk, b.code),
           children: retBarberKids(b).map(r=>Object.assign(r,{ fmt:'ret4' })) })) }];
     }
-    /* source */
-    return [{ id:'SRC', name:'Where they came from', level:0, tag:'field not built', val:()=>null,
-      children: BRANCHES.map(b=>({ id:'s'+b.code, name:b.name, level:1, val:()=>null,
-        children: SOURCES.map((s,si)=>({ id:'s'+b.code+'/'+si, name:s, level:2, val:()=>null })) })) }];
+    /* source: the origin answer on the till ticket (SML source), tagged since 16 Sep.
+       REAL.source is cumulative distinct customers per week-end, so a week is this
+       week-end less the one before. Sampling = tagged customers ÷ clients served (DOR). */
+    const SRC_CATS = [['visit','Visiting'],['live','Live in the area'],['work','Work in the area']];
+    function srcWeek(pk, code, cat){
+      const node = REAL.source && REAL.source[code]; if(!node) return null;
+      const iso = pk.slice(1), cur = node[iso] && node[iso][cat];
+      if(cur==null) return null;                                   // before tagging began
+      const d = new Date(iso+'T00:00:00Z'); d.setUTCDate(d.getUTCDate()-7);
+      const prev = node[d.toISOString().slice(0,10)];
+      return cur - ((prev && prev[cat]) || 0);
+    }
+    const tagged = (pk, code)=>{ let s=0; for(const c of SRC_CATS){ const v=srcWeek(pk,code,c[0]); if(v==null) return null; s+=v; } return s; };
+    const served = (pk, code)=> code==='ALL' ? sumBranches('clients',pk) : get('clients',pk,code);
+    const rows = SRC_CATS.map(([cat,label])=>({ id:'src-'+cat, name:label, level:0, tag:'till', fmt:'int', movement:'count',
+      val: pk=>srcWeek(pk,'ALL',cat),
+      children: BRANCHES.map(b=>({ id:'src-'+cat+b.code, name:b.name, level:1, fmt:'int', movement:'count',
+        val: pk=>srcWeek(pk,b.code,cat) })) }));
+    rows.push({sep:true,id:'src-s'});
+    rows.push({ id:'src-smp', name:'Sampling · tagged ÷ clients served', level:0, derived:true, fmt:'pct', movement:'pp',
+      val: pk=>{ const t=tagged(pk,'ALL'), c=served(pk,'ALL'); return (t!=null && c) ? t/c : null; },
+      children: BRANCHES.map(b=>({ id:'src-smp'+b.code, name:b.name, level:1, derived:true, fmt:'pct', movement:'pp',
+        tag: (()=>{ const n=REAL.source&&REAL.source[b.code]; const ks=n?Object.keys(n):[]; const last=ks.sort().pop();
+                    return (last && !SRC_CATS.some(c=>n[last][c[0]])) ? 'not tagging' : ''; })(),
+        val: pk=>{ const t=tagged(pk,b.code), c=served(pk,b.code); return (t!=null && c) ? t/c : null; } })) });
+    return rows;
   }
   const HEADS = {
     totals:    'Foot traffic · branch from the daily form, barbers from Yodel',
     demand:    'Walked in / Booked ahead · turn-downs · cancellation rate',
     retention: 'Retention · each figure labelled in the cell · Yodel',
-    source:    'Where they came from'
+    source:    'Where they came from · till tag, from 16 Sep · sampling = tagged ÷ served'
   };
   buildGrid(host, {
     fmt:'int', movement:'pct', upIsGood:true, windows:[6,9,13], trailN:6,
